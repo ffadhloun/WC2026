@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIFA World Cup 2026 – Tunisia Time</title>
 <style>
-:root {
+:root{
   --bg:#f2f1ed;--surface:#fff;--surface2:#eceae5;--border:rgba(0,0,0,0.08);
   --border-strong:rgba(0,0,0,0.15);--text:#111;--text-muted:#666;--text-faint:#aaa;
   --accent:#d42e35;--gold:#b8872a;--gold-bg:#fdf8ee;
   --green:#1a7a3f;--green-bg:#edf7f1;--yellow:#9a6200;--yellow-bg:#fdf6e3;
-  --red:#c0392b;--red-bg:#fdf1f0;
-  --gcal:#1a73e8;--gcal-bg:#e8f0fe;
+  --red:#c0392b;--gcal:#1a73e8;--gcal-bg:#e8f0fe;
   --r:10px;--rs:6px;--font:-apple-system,'Segoe UI',system-ui,sans-serif;
   --shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
 }
@@ -20,31 +19,36 @@
   --border-strong:rgba(255,255,255,0.14);--text:#e8eaf0;--text-muted:#8a90a8;--text-faint:#454d66;
   --accent:#e8474e;--gold:#d4a843;--gold-bg:rgba(212,168,67,0.1);
   --green:#2dcc6a;--green-bg:rgba(45,204,106,0.1);--yellow:#f0b429;--yellow-bg:rgba(240,180,41,0.1);
-  --red:#f06060;--red-bg:rgba(240,96,96,0.1);
-  --gcal:#8ab4f8;--gcal-bg:rgba(138,180,248,0.12);
+  --red:#f06060;--gcal:#8ab4f8;--gcal-bg:rgba(138,180,248,0.12);
   --shadow:0 1px 4px rgba(0,0,0,0.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.4;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
 
-/* ── HEADER ── */
+/* HEADER */
 .hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50}
-.hdr-in{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.hdr h1{font-size:1rem;font-weight:700;letter-spacing:.01em}
+.hdr-in{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hdr h1{font-size:1rem;font-weight:700}
 .hdr h1 em{color:var(--accent);font-style:normal}
-.hdr-sub{font-size:.72rem;color:var(--text-muted);margin-top:1px}
+.hdr-sub{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:8px}
 .tbtn{border:1px solid var(--border-strong);background:var(--surface2);color:var(--text-muted);padding:4px 10px;border-radius:var(--rs);cursor:pointer;font-size:.72rem;font-family:var(--font)}
 .tbtn:hover{color:var(--text)}
+.api-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--green)}.dot-loading{background:var(--yellow);animation:blink 1s infinite}
+.dot-err{background:var(--red)}.dot-off{background:var(--text-faint)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.status-txt{font-size:.7rem;color:var(--text-muted)}
 
-/* ── STATS BAR ── */
+/* STATS */
 .sbar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 20px}
 .sbar-in{max-width:1280px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
 .sp{display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text-muted)}
 .sp b{color:var(--text);font-weight:700}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
-.dg{background:var(--green)}.dy{background:var(--yellow)}.dr{background:var(--red)}.da{background:var(--accent)}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sg{background:var(--green)}.sy{background:var(--yellow)}.sr{background:var(--red)}.sa{background:var(--accent)}
 
-/* ── FILTERS ── */
+/* FILTERS */
 .fbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;position:sticky;top:49px;z-index:40}
 .fbar-in{max-width:1280px;margin:0 auto;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .flbl{font-size:.68rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.07em;margin-right:4px}
@@ -53,106 +57,89 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .fb.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .fb.fg.active{background:var(--green);border-color:var(--green);color:#fff}
 .fb.fy.active{background:var(--yellow);border-color:var(--yellow);color:#fff}
+.fb.ft.active{background:var(--gcal);border-color:var(--gcal);color:#fff}
 
-/* ── LAYOUT ── */
+/* MAIN */
 .main{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
 
+/* SKELETON LOADER */
+.skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-bottom:24px}
+.skel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);height:160px;overflow:hidden;position:relative}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(128,128,128,.08) 50%,transparent 100%);animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* DAY SECTION */
 .day-block{margin-bottom:24px}
 .day-lbl{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
-
-/* THE GRID */
 .day-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
 
-/* ── MATCH CARD ── */
-.mc{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;
-  transition:border-color .14s,box-shadow .14s;
-}
-.mc:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.mc.tn{border-left:3px solid var(--accent)}
-.mc.fin{border-color:var(--gold);background:var(--gold-bg)}
+/* TODAY SECTION */
+.today-hdr{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px;flex-wrap:wrap}
+.today-lbl{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+.live-count{font-size:.65rem;background:var(--accent);color:#fff;padding:1px 7px;border-radius:10px;font-weight:700}
+.refresh-btn{margin-left:auto;font-size:.68rem;color:var(--text-faint);background:none;border:none;cursor:pointer;font-family:var(--font);padding:2px 6px;border-radius:4px}
+.refresh-btn:hover{color:var(--text);background:var(--surface2)}
+.upd-time{font-size:.65rem;color:var(--text-faint)}
 
-/* card top row: group badge + time + dot */
-.mc-top{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:8px 10px 6px;border-bottom:1px solid var(--border);
-}
-.mc-badge{padding:2px 7px;border-radius:4px;font-size:.65rem;font-weight:700;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);letter-spacing:.03em}
+/* MATCH CARD */
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;transition:border-color .14s}
+.mc:hover{border-color:var(--border-strong)}
+.mc.tn{border-left:3px solid var(--accent)}
+.mc.fin-match{border-color:var(--gold);background:var(--gold-bg)}
+.mc.live-now{border-color:var(--accent);box-shadow:0 0 0 1px rgba(232,71,78,.15)}
+
+/* card top */
+.mc-top{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;border-bottom:1px solid var(--border)}
+.mc-badge{padding:2px 7px;border-radius:4px;font-size:.65rem;font-weight:700;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)}
 .mc-badge.fin-b{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+.mc-badge.ko-b{background:rgba(138,180,248,.12);border-color:var(--gcal);color:var(--gcal)}
 .mc-time-wrap{display:flex;align-items:center;gap:6px}
 .mc-time{font-size:.95rem;font-weight:700;color:var(--text)}
-.mc-dot{width:7px;height:7px;border-radius:50%}
+.mc-cdot{width:7px;height:7px;border-radius:50%}
+.dg{background:var(--green)}.dy{background:var(--yellow)}.dr{background:var(--red)}
 
-/* card teams section */
-.mc-teams{
-  display:flex;align-items:center;justify-content:center;
-  gap:10px;padding:12px 12px 8px;flex:1;
-}
+/* teams */
+.mc-teams{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 12px 6px;flex:1}
 .mc-team{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;flex:1}
-.mc-team img{width:32px;height:24px;border-radius:3px;object-fit:cover;border:1px solid var(--border)}
-.mc-team .flag-fb,.flag-fb{border-radius:3px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-faint);vertical-align:middle}
-.mc-team .tname{font-size:.78rem;font-weight:600;color:var(--text);text-align:center;line-height:1.2;word-break:break-word}
-.mc-vs{font-size:.68rem;color:var(--text-faint);font-weight:400;flex-shrink:0;padding-top:14px}
-.fin-teams{text-align:center;padding:16px 12px 8px;flex:1;display:flex;align-items:center;justify-content:center}
-.fin-lbl{font-size:.95rem;font-weight:700;color:var(--gold)}
+.mc-team img{width:28px;height:21px;border-radius:3px;object-fit:cover;border:1px solid var(--border);display:block}
+.flag-fb{border-radius:3px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-faint)}
+.tname{font-size:.78rem;font-weight:600;color:var(--text);text-align:center;line-height:1.2;word-break:break-word}
+.mc-vs{font-size:.68rem;color:var(--text-faint);flex-shrink:0;padding-top:14px}
+.tbd-teams{text-align:center;padding:14px 12px 6px;flex:1;display:flex;align-items:center;justify-content:center}
+.tbd-lbl{font-size:.82rem;font-weight:600;color:var(--text-muted)}
 
-/* card meta */
-.mc-meta{padding:0 10px 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.mc-venue{font-size:.68rem;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-.mc-suit{font-size:.68rem;flex-shrink:0}
+/* scores */
+.score-wrap{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 10px 2px;min-height:22px}
+.score-n{font-size:1.1rem;font-weight:700;color:var(--text)}
+.score-sep{color:var(--text-faint);font-size:.8rem}
+.live-badge{display:inline-flex;align-items:center;gap:3px;background:var(--accent);color:#fff;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px}
+.live-pulse{width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.score-ft{font-size:.62rem;color:var(--text-faint);text-align:center;padding-bottom:2px}
+
+/* meta */
+.mc-meta{padding:2px 10px 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mc-venue{font-size:.67rem;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.mc-suit{font-size:.67rem;flex-shrink:0}
 .sc-green{color:var(--green)}.sc-yellow{color:var(--yellow)}.sc-red{color:var(--red)}
 
-/* card cal buttons */
-.mc-cal{
-  border-top:1px solid var(--border);padding:7px 8px;
-  display:flex;gap:6px;
-}
-.cbtn{
-  flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;
-  padding:5px 6px;border-radius:var(--rs);font-size:.7rem;font-weight:600;
-  cursor:pointer;text-decoration:none;border:none;font-family:var(--font);
-  transition:opacity .12s,transform .1s;white-space:nowrap;
-}
+/* cal buttons */
+.mc-cal{border-top:1px solid var(--border);padding:7px 8px;display:flex;gap:6px}
+.cbtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 6px;border-radius:var(--rs);font-size:.7rem;font-weight:600;cursor:pointer;text-decoration:none;border:none;font-family:var(--font);transition:opacity .12s,transform .1s;white-space:nowrap}
 .cbtn:hover{opacity:.82;transform:translateY(-1px)}
 .cbtn:active{transform:translateY(0)}
 .cg{background:var(--gcal-bg);color:var(--gcal);border:1px solid transparent}
 .ci{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border)}
 .cbtn svg{width:12px;height:12px;flex-shrink:0}
 
-/* empty state */
-.empty{text-align:center;padding:48px 20px;color:var(--text-faint);font-size:.9rem;grid-column:1/-1}
+/* empty / error */
+.msg{text-align:center;padding:40px 20px;color:var(--text-faint);font-size:.9rem;grid-column:1/-1}
+.err-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;font-size:.82rem;color:var(--text-muted)}
+.err-box strong{color:var(--red)}
 
-/* ── LIVE SCORES ── */
-.score-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 10px 2px;font-size:.82rem}
-.score-num{font-size:1.1rem;font-weight:700;color:var(--text);min-width:18px;text-align:center}
-.score-sep{color:var(--text-faint);font-size:.75rem}
-.live-badge{display:inline-flex;align-items:center;gap:3px;background:#e8474e;color:#fff;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em}
-.live-pulse{width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.status-ft{font-size:.65rem;color:var(--text-faint);text-align:center;padding-bottom:4px}
-.status-ns{font-size:.65rem;color:var(--text-faint);text-align:center;padding-bottom:4px}
-.mc.live-now{border-color:#e8474e;box-shadow:0 0 0 1px #e8474e22}
-
-
-
-/* ── TODAY PINNED SECTION ── */
-.today-section{margin-bottom:28px}
-.today-header{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
-.today-lbl{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
-.today-live-count{font-size:.68rem;background:#e8474e;color:#fff;padding:1px 7px;border-radius:10px;font-weight:700}
-.refresh-btn{margin-left:auto;font-size:.68rem;color:var(--text-faint);background:none;border:none;cursor:pointer;font-family:var(--font);padding:2px 6px;border-radius:4px}
-.refresh-btn:hover{color:var(--text);background:var(--surface2)}
-.last-updated{font-size:.65rem;color:var(--text-faint);margin-left:4px}
-
-.fb.ft.active{background:#1a73e8;border-color:#1a73e8;color:#fff}
-
-/* ── RESPONSIVE ── */
 @media(max-width:480px){
-  .hdr{padding:10px 14px}
-  .fbar{top:44px}
-  .mc-team img,.mc-team .flag-fb{width:26px;height:20px}
-  .mc-time{font-size:.85rem}
+  .hdr{padding:10px 14px}.fbar{top:44px}
+  .mc-team img,.flag-fb{width:22px!important;height:16px!important}
 }
 </style>
 </head>
@@ -162,18 +149,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   <div class="hdr-in">
     <div>
       <h1>🏆 FIFA World Cup 2026 <em>· Tunisia Time</em></h1>
-      <p class="hdr-sub">All times UTC+1 (Africa/Tunis) · 72 matches</p>
+      <p class="hdr-sub">All times UTC+1 · Powered by ESPN · Auto-refreshes every 60s</p>
     </div>
-    <button class="tbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+    <div class="hdr-right">
+      <span class="api-status-dot dot-loading" id="apiDot"></span>
+      <span class="status-txt" id="apiTxt">Loading…</span>
+      <button class="tbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+    </div>
   </div>
 </header>
 
 <div class="sbar">
   <div class="sbar-in">
-    <div class="sp"><span class="dot dg"></span><b id="cg">0</b> good hours</div>
-    <div class="sp"><span class="dot dy"></span><b id="cy">0</b> borderline</div>
-    <div class="sp"><span class="dot dr"></span><b id="cr">0</b> rough</div>
-    <div class="sp"><span class="dot da"></span><b>3</b> 🇹🇳 Tunisia matches</div>
+    <div class="sp"><span class="sdot sg"></span><b id="cg">–</b> good hours</div>
+    <div class="sp"><span class="sdot sy"></span><b id="cy">–</b> borderline</div>
+    <div class="sp"><span class="sdot sr"></span><b id="cr">–</b> rough</div>
+    <div class="sp"><span class="sdot sa"></span><b id="ctn">–</b> 🇹🇳 Tunisia</div>
+    <div class="sp" id="totalSp" style="display:none"><b id="ctotal">–</b> total matches</div>
   </div>
 </div>
 
@@ -188,211 +180,315 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
-<main class="main" id="schedule"></main>
+<main class="main" id="schedule">
+  <!-- skeleton -->
+  <div style="margin-bottom:24px">
+    <div class="day-lbl" style="width:100px;height:10px;background:var(--border);border-radius:4px;border:none;margin-bottom:12px"></div>
+    <div class="skeleton-grid">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+  </div>
+</main>
 
 <script>
-const FLAGS={"Mexico":"mx","South Africa":"za","South Korea":"kr","Czechia":"cz","Canada":"ca","Bosnia and Herzegovina":"ba","United States":"us","USA":"us","Paraguay":"py","Qatar":"qa","Switzerland":"ch","Brazil":"br","Morocco":"ma","Haiti":"ht","Scotland":"gb-sct","Australia":"au","Türkiye":"tr","Germany":"de","Curaçao":"cw","Netherlands":"nl","Japan":"jp","Ivory Coast":"ci","Ecuador":"ec","Sweden":"se","Tunisia":"tn","Spain":"es","Cabo Verde":"cv","Belgium":"be","Egypt":"eg","Saudi Arabia":"sa","Uruguay":"uy","Iran":"ir","New Zealand":"nz","France":"fr","Senegal":"sn","Iraq":"iq","Norway":"no","Argentina":"ar","Algeria":"dz","Austria":"at","Jordan":"jo","Ghana":"gh","Panama":"pa","England":"gb-eng","Croatia":"hr","Portugal":"pt","Congo DR":"cd","Uzbekistan":"uz","Colombia":"co"};
+// ── CONSTANTS ──
+const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+const TZ_OFFSET = 1; // Tunisia UTC+1
 
-const M=[{"home":"Mexico","away":"South Africa","date":"Thu Jun 11 2026","time":"20:00","group":"Group A","venue":"Mexico City Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260611T190000Z","gcal_end":"20260611T210000Z","ics_start":"20260611T200000","ics_end":"20260611T220000","title":"FIFA WC 2026: Mexico vs South Africa","display_date":"Thu 11 Jun"},{"home":"South Korea","away":"Czechia","date":"Fri Jun 12 2026","time":"03:00","group":"Group A","venue":"Estadio Guadalajara","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260612T020000Z","gcal_end":"20260612T040000Z","ics_start":"20260612T030000","ics_end":"20260612T050000","title":"FIFA WC 2026: South Korea vs Czechia","display_date":"Fri 12 Jun"},{"home":"Canada","away":"Bosnia and Herzegovina","date":"Fri Jun 12 2026","time":"20:00","group":"Group B","venue":"Toronto Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260612T190000Z","gcal_end":"20260612T210000Z","ics_start":"20260612T200000","ics_end":"20260612T220000","title":"FIFA WC 2026: Canada vs Bosnia and Herzegovina","display_date":"Fri 12 Jun"},{"home":"United States","away":"Paraguay","date":"Sat Jun 13 2026","time":"02:00","group":"Group D","venue":"Los Angeles Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260613T010000Z","gcal_end":"20260613T030000Z","ics_start":"20260613T020000","ics_end":"20260613T040000","title":"FIFA WC 2026: United States vs Paraguay","display_date":"Sat 13 Jun"},{"home":"Qatar","away":"Switzerland","date":"Sat Jun 13 2026","time":"20:00","group":"Group B","venue":"San Francisco Bay Area Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260613T190000Z","gcal_end":"20260613T210000Z","ics_start":"20260613T200000","ics_end":"20260613T220000","title":"FIFA WC 2026: Qatar vs Switzerland","display_date":"Sat 13 Jun"},{"home":"Brazil","away":"Morocco","date":"Sat Jun 13 2026","time":"23:00","group":"Group C","venue":"New York/New Jersey Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260613T220000Z","gcal_end":"20260614T000000Z","ics_start":"20260613T230000","ics_end":"20260614T010000","title":"FIFA WC 2026: Brazil vs Morocco","display_date":"Sat 13 Jun"},{"home":"Haiti","away":"Scotland","date":"Sun Jun 14 2026","time":"02:00","group":"Group C","venue":"Boston Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260614T010000Z","gcal_end":"20260614T030000Z","ics_start":"20260614T020000","ics_end":"20260614T040000","title":"FIFA WC 2026: Haiti vs Scotland","display_date":"Sun 14 Jun"},{"home":"Australia","away":"Türkiye","date":"Sun Jun 14 2026","time":"05:00","group":"Group D","venue":"BC Place Vancouver","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260614T040000Z","gcal_end":"20260614T060000Z","ics_start":"20260614T050000","ics_end":"20260614T070000","title":"FIFA WC 2026: Australia vs Türkiye","display_date":"Sun 14 Jun"},{"home":"Germany","away":"Curaçao","date":"Sun Jun 14 2026","time":"18:00","group":"Group E","venue":"Houston Stadium","suitability":"🟢 Suitable (Great Time)","gcal_start":"20260614T170000Z","gcal_end":"20260614T190000Z","ics_start":"20260614T180000","ics_end":"20260614T200000","title":"FIFA WC 2026: Germany vs Curaçao","display_date":"Sun 14 Jun"},{"home":"Netherlands","away":"Japan","date":"Sun Jun 14 2026","time":"21:00","group":"Group F","venue":"Dallas Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260614T200000Z","gcal_end":"20260614T220000Z","ics_start":"20260614T210000","ics_end":"20260614T230000","title":"FIFA WC 2026: Netherlands vs Japan","display_date":"Sun 14 Jun"},{"home":"Ivory Coast","away":"Ecuador","date":"Mon Jun 15 2026","time":"00:00","group":"Group E","venue":"Philadelphia Stadium","suitability":"🔴 Too Late / Midnight","gcal_start":"20260614T230000Z","gcal_end":"20260615T010000Z","ics_start":"20260615T000000","ics_end":"20260615T020000","title":"FIFA WC 2026: Ivory Coast vs Ecuador","display_date":"Mon 15 Jun"},{"home":"Sweden","away":"Tunisia","date":"Mon Jun 15 2026","time":"03:00","group":"Group F","venue":"Estadio Monterrey","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260615T020000Z","gcal_end":"20260615T040000Z","ics_start":"20260615T030000","ics_end":"20260615T050000","title":"FIFA WC 2026: Sweden vs Tunisia","display_date":"Mon 15 Jun"},{"home":"Spain","away":"Cabo Verde","date":"Mon Jun 15 2026","time":"17:00","group":"Group H","venue":"Atlanta Stadium","suitability":"🟢 Suitable (Late Afternoon)","gcal_start":"20260615T160000Z","gcal_end":"20260615T180000Z","ics_start":"20260615T170000","ics_end":"20260615T190000","title":"FIFA WC 2026: Spain vs Cabo Verde","display_date":"Mon 15 Jun"},{"home":"Belgium","away":"Egypt","date":"Mon Jun 15 2026","time":"20:00","group":"Group G","venue":"Seattle Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260615T190000Z","gcal_end":"20260615T210000Z","ics_start":"20260615T200000","ics_end":"20260615T220000","title":"FIFA WC 2026: Belgium vs Egypt","display_date":"Mon 15 Jun"},{"home":"Saudi Arabia","away":"Uruguay","date":"Mon Jun 15 2026","time":"23:00","group":"Group H","venue":"Miami Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260615T220000Z","gcal_end":"20260616T000000Z","ics_start":"20260615T230000","ics_end":"20260616T010000","title":"FIFA WC 2026: Saudi Arabia vs Uruguay","display_date":"Mon 15 Jun"},{"home":"Iran","away":"New Zealand","date":"Tue Jun 16 2026","time":"02:00","group":"Group G","venue":"Los Angeles Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260616T010000Z","gcal_end":"20260616T030000Z","ics_start":"20260616T020000","ics_end":"20260616T040000","title":"FIFA WC 2026: Iran vs New Zealand","display_date":"Tue 16 Jun"},{"home":"France","away":"Senegal","date":"Tue Jun 16 2026","time":"20:00","group":"Group I","venue":"New York/New Jersey Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260616T190000Z","gcal_end":"20260616T210000Z","ics_start":"20260616T200000","ics_end":"20260616T220000","title":"FIFA WC 2026: France vs Senegal","display_date":"Tue 16 Jun"},{"home":"Iraq","away":"Norway","date":"Tue Jun 16 2026","time":"23:00","group":"Group I","venue":"Boston Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260616T220000Z","gcal_end":"20260617T000000Z","ics_start":"20260616T230000","ics_end":"20260617T010000","title":"FIFA WC 2026: Iraq vs Norway","display_date":"Tue 16 Jun"},{"home":"Argentina","away":"Algeria","date":"Wed Jun 17 2026","time":"02:00","group":"Group J","venue":"Kansas City Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260617T010000Z","gcal_end":"20260617T030000Z","ics_start":"20260617T020000","ics_end":"20260617T040000","title":"FIFA WC 2026: Argentina vs Algeria","display_date":"Wed 17 Jun"},{"home":"Austria","away":"Jordan","date":"Wed Jun 17 2026","time":"05:00","group":"Group J","venue":"San Francisco Bay Area Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260617T040000Z","gcal_end":"20260617T060000Z","ics_start":"20260617T050000","ics_end":"20260617T070000","title":"FIFA WC 2026: Austria vs Jordan","display_date":"Wed 17 Jun"},{"home":"Ghana","away":"Panama","date":"Wed Jun 17 2026","time":"20:00","group":"Group L","venue":"Toronto Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260617T190000Z","gcal_end":"20260617T210000Z","ics_start":"20260617T200000","ics_end":"20260617T220000","title":"FIFA WC 2026: Ghana vs Panama","display_date":"Wed 17 Jun"},{"home":"England","away":"Croatia","date":"Wed Jun 17 2026","time":"23:00","group":"Group L","venue":"Dallas Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260617T220000Z","gcal_end":"20260618T000000Z","ics_start":"20260617T230000","ics_end":"20260618T010000","title":"FIFA WC 2026: England vs Croatia","display_date":"Wed 17 Jun"},{"home":"Portugal","away":"Congo DR","date":"Thu Jun 18 2026","time":"02:00","group":"Group K","venue":"Houston Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260618T010000Z","gcal_end":"20260618T030000Z","ics_start":"20260618T020000","ics_end":"20260618T040000","title":"FIFA WC 2026: Portugal vs Congo DR","display_date":"Thu 18 Jun"},{"home":"Uzbekistan","away":"Colombia","date":"Thu Jun 18 2026","time":"05:00","group":"Group K","venue":"Mexico City Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260618T040000Z","gcal_end":"20260618T060000Z","ics_start":"20260618T050000","ics_end":"20260618T070000","title":"FIFA WC 2026: Uzbekistan vs Colombia","display_date":"Thu 18 Jun"},{"home":"Czechia","away":"South Africa","date":"Thu Jun 18 2026","time":"18:00","group":"Group A","venue":"Atlanta Stadium","suitability":"🟢 Suitable (Great Time)","gcal_start":"20260618T170000Z","gcal_end":"20260618T190000Z","ics_start":"20260618T180000","ics_end":"20260618T200000","title":"FIFA WC 2026: Czechia vs South Africa","display_date":"Thu 18 Jun"},{"home":"Switzerland","away":"Bosnia and Herzegovina","date":"Thu Jun 18 2026","time":"21:00","group":"Group B","venue":"Los Angeles Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260618T200000Z","gcal_end":"20260618T220000Z","ics_start":"20260618T210000","ics_end":"20260618T230000","title":"FIFA WC 2026: Switzerland vs Bosnia and Herzegovina","display_date":"Thu 18 Jun"},{"home":"Canada","away":"Qatar","date":"Fri Jun 19 2026","time":"00:00","group":"Group B","venue":"BC Place Vancouver","suitability":"🔴 Too Late / Midnight","gcal_start":"20260618T230000Z","gcal_end":"20260619T010000Z","ics_start":"20260619T000000","ics_end":"20260619T020000","title":"FIFA WC 2026: Canada vs Qatar","display_date":"Fri 19 Jun"},{"home":"Mexico","away":"South Korea","date":"Fri Jun 19 2026","time":"03:00","group":"Group A","venue":"Estadio Guadalajara","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260619T020000Z","gcal_end":"20260619T040000Z","ics_start":"20260619T030000","ics_end":"20260619T050000","title":"FIFA WC 2026: Mexico vs South Korea","display_date":"Fri 19 Jun"},{"home":"USA","away":"Australia","date":"Fri Jun 19 2026","time":"20:00","group":"Group D","venue":"Seattle Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260619T190000Z","gcal_end":"20260619T210000Z","ics_start":"20260619T200000","ics_end":"20260619T220000","title":"FIFA WC 2026: USA vs Australia","display_date":"Fri 19 Jun"},{"home":"Scotland","away":"Morocco","date":"Fri Jun 19 2026","time":"23:00","group":"Group C","venue":"Boston Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260619T220000Z","gcal_end":"20260620T000000Z","ics_start":"20260619T230000","ics_end":"20260620T010000","title":"FIFA WC 2026: Scotland vs Morocco","display_date":"Fri 19 Jun"},{"home":"Türkiye","away":"Paraguay","date":"Sat Jun 20 2026","time":"02:00","group":"Group D","venue":"San Francisco Bay Area Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260620T010000Z","gcal_end":"20260620T030000Z","ics_start":"20260620T020000","ics_end":"20260620T040000","title":"FIFA WC 2026: Türkiye vs Paraguay","display_date":"Sat 20 Jun"},{"home":"Brazil","away":"Haiti","date":"Sat Jun 20 2026","time":"05:00","group":"Group C","venue":"Philadelphia Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260620T040000Z","gcal_end":"20260620T060000Z","ics_start":"20260620T050000","ics_end":"20260620T070000","title":"FIFA WC 2026: Brazil vs Haiti","display_date":"Sat 20 Jun"},{"home":"Germany","away":"Ivory Coast","date":"Sat Jun 20 2026","time":"21:00","group":"Group E","venue":"Toronto Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260620T200000Z","gcal_end":"20260620T220000Z","ics_start":"20260620T210000","ics_end":"20260620T230000","title":"FIFA WC 2026: Germany vs Ivory Coast","display_date":"Sat 20 Jun"},{"home":"Ecuador","away":"Curaçao","date":"Sun Jun 21 2026","time":"00:00","group":"Group E","venue":"Kansas City Stadium","suitability":"🔴 Too Late / Midnight","gcal_start":"20260620T230000Z","gcal_end":"20260621T010000Z","ics_start":"20260621T000000","ics_end":"20260621T020000","title":"FIFA WC 2026: Ecuador vs Curaçao","display_date":"Sun 21 Jun"},{"home":"Tunisia","away":"Japan","date":"Sun Jun 21 2026","time":"04:00","group":"Group F","venue":"Estadio Monterrey","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260621T030000Z","gcal_end":"20260621T050000Z","ics_start":"20260621T040000","ics_end":"20260621T060000","title":"FIFA WC 2026: Tunisia vs Japan","display_date":"Sun 21 Jun"},{"home":"Spain","away":"Saudi Arabia","date":"Sun Jun 21 2026","time":"21:00","group":"Group H","venue":"Atlanta Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260621T200000Z","gcal_end":"20260621T220000Z","ics_start":"20260621T210000","ics_end":"20260621T230000","title":"FIFA WC 2026: Spain vs Saudi Arabia","display_date":"Sun 21 Jun"},{"home":"Belgium","away":"Iran","date":"Mon Jun 22 2026","time":"00:00","group":"Group G","venue":"Los Angeles Stadium","suitability":"🔴 Too Late / Midnight","gcal_start":"20260621T230000Z","gcal_end":"20260622T010000Z","ics_start":"20260622T000000","ics_end":"20260622T020000","title":"FIFA WC 2026: Belgium vs Iran","display_date":"Mon 22 Jun"},{"home":"Uruguay","away":"Cabo Verde","date":"Mon Jun 22 2026","time":"03:00","group":"Group H","venue":"Miami Stadium","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260622T020000Z","gcal_end":"20260622T040000Z","ics_start":"20260622T030000","ics_end":"20260622T050000","title":"FIFA WC 2026: Uruguay vs Cabo Verde","display_date":"Mon 22 Jun"},{"home":"New Zealand","away":"Egypt","date":"Mon Jun 22 2026","time":"05:00","group":"Group G","venue":"BC Place Vancouver","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260622T040000Z","gcal_end":"20260622T060000Z","ics_start":"20260622T050000","ics_end":"20260622T070000","title":"FIFA WC 2026: New Zealand vs Egypt","display_date":"Mon 22 Jun"},{"home":"Argentina","away":"Austria","date":"Mon Jun 22 2026","time":"23:00","group":"Group J","venue":"Dallas Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260622T220000Z","gcal_end":"20260623T000000Z","ics_start":"20260622T230000","ics_end":"20260623T010000","title":"FIFA WC 2026: Argentina vs Austria","display_date":"Mon 22 Jun"},{"home":"France","away":"Iraq","date":"Tue Jun 23 2026","time":"02:00","group":"Group I","venue":"Philadelphia Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260623T010000Z","gcal_end":"20260623T030000Z","ics_start":"20260623T020000","ics_end":"20260623T040000","title":"FIFA WC 2026: France vs Iraq","display_date":"Tue 23 Jun"},{"home":"Norway","away":"Senegal","date":"Tue Jun 23 2026","time":"05:00","group":"Group I","venue":"New York/New Jersey Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260623T040000Z","gcal_end":"20260623T060000Z","ics_start":"20260623T050000","ics_end":"20260623T070000","title":"FIFA WC 2026: Norway vs Senegal","display_date":"Tue 23 Jun"},{"home":"Jordan","away":"Algeria","date":"Tue Jun 23 2026","time":"20:00","group":"Group J","venue":"San Francisco Bay Area Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260623T190000Z","gcal_end":"20260623T210000Z","ics_start":"20260623T200000","ics_end":"20260623T220000","title":"FIFA WC 2026: Jordan vs Algeria","display_date":"Tue 23 Jun"},{"home":"Portugal","away":"Uzbekistan","date":"Tue Jun 23 2026","time":"23:00","group":"Group K","venue":"Houston Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260623T220000Z","gcal_end":"20260624T000000Z","ics_start":"20260623T230000","ics_end":"20260624T010000","title":"FIFA WC 2026: Portugal vs Uzbekistan","display_date":"Tue 23 Jun"},{"home":"England","away":"Ghana","date":"Wed Jun 24 2026","time":"02:00","group":"Group L","venue":"Boston Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260624T010000Z","gcal_end":"20260624T030000Z","ics_start":"20260624T020000","ics_end":"20260624T040000","title":"FIFA WC 2026: England vs Ghana","display_date":"Wed 24 Jun"},{"home":"Panama","away":"Croatia","date":"Wed Jun 24 2026","time":"05:00","group":"Group L","venue":"Toronto Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260624T040000Z","gcal_end":"20260624T060000Z","ics_start":"20260624T050000","ics_end":"20260624T070000","title":"FIFA WC 2026: Panama vs Croatia","display_date":"Wed 24 Jun"},{"home":"Colombia","away":"Congo DR","date":"Wed Jun 24 2026","time":"05:00","group":"Group K","venue":"Estadio Guadalajara","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260624T040000Z","gcal_end":"20260624T060000Z","ics_start":"20260624T050000","ics_end":"20260624T070000","title":"FIFA WC 2026: Colombia vs Congo DR","display_date":"Wed 24 Jun"},{"home":"Switzerland","away":"Canada","date":"Wed Jun 24 2026","time":"20:00","group":"Group B","venue":"BC Place Vancouver","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260624T190000Z","gcal_end":"20260624T210000Z","ics_start":"20260624T200000","ics_end":"20260624T220000","title":"FIFA WC 2026: Switzerland vs Canada","display_date":"Wed 24 Jun"},{"home":"Bosnia and Herzegovina","away":"Qatar","date":"Wed Jun 24 2026","time":"20:00","group":"Group B","venue":"Seattle Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260624T190000Z","gcal_end":"20260624T210000Z","ics_start":"20260624T200000","ics_end":"20260624T220000","title":"FIFA WC 2026: Bosnia and Herzegovina vs Qatar","display_date":"Wed 24 Jun"},{"home":"Morocco","away":"Haiti","date":"Wed Jun 24 2026","time":"23:00","group":"Group C","venue":"Atlanta Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260624T220000Z","gcal_end":"20260625T000000Z","ics_start":"20260624T230000","ics_end":"20260625T010000","title":"FIFA WC 2026: Morocco vs Haiti","display_date":"Wed 24 Jun"},{"home":"Scotland","away":"Brazil","date":"Wed Jun 24 2026","time":"23:00","group":"Group C","venue":"Miami Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260624T220000Z","gcal_end":"20260625T000000Z","ics_start":"20260624T230000","ics_end":"20260625T010000","title":"FIFA WC 2026: Scotland vs Brazil","display_date":"Wed 24 Jun"},{"home":"South Africa","away":"South Korea","date":"Thu Jun 25 2026","time":"03:00","group":"Group A","venue":"Estadio Monterrey","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260625T020000Z","gcal_end":"20260625T040000Z","ics_start":"20260625T030000","ics_end":"20260625T050000","title":"FIFA WC 2026: South Africa vs South Korea","display_date":"Thu 25 Jun"},{"home":"Czechia","away":"Mexico","date":"Thu Jun 25 2026","time":"03:00","group":"Group A","venue":"Mexico City Stadium","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260625T020000Z","gcal_end":"20260625T040000Z","ics_start":"20260625T030000","ics_end":"20260625T050000","title":"FIFA WC 2026: Czechia vs Mexico","display_date":"Thu 25 Jun"},{"home":"Curaçao","away":"Ivory Coast","date":"Thu Jun 25 2026","time":"21:00","group":"Group E","venue":"Philadelphia Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260625T200000Z","gcal_end":"20260625T220000Z","ics_start":"20260625T210000","ics_end":"20260625T230000","title":"FIFA WC 2026: Curaçao vs Ivory Coast","display_date":"Thu 25 Jun"},{"home":"Ecuador","away":"Germany","date":"Thu Jun 25 2026","time":"21:00","group":"Group E","venue":"New York/New Jersey Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260625T200000Z","gcal_end":"20260625T220000Z","ics_start":"20260625T210000","ics_end":"20260625T230000","title":"FIFA WC 2026: Ecuador vs Germany","display_date":"Thu 25 Jun"},{"home":"Tunisia","away":"Netherlands","date":"Fri Jun 26 2026","time":"04:30","group":"Group F","venue":"Kansas City Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260626T033000Z","gcal_end":"20260626T053000Z","ics_start":"20260626T043000","ics_end":"20260626T063000","title":"FIFA WC 2026: Tunisia vs Netherlands","display_date":"Fri 26 Jun"},{"home":"Japan","away":"Sweden","date":"Fri Jun 26 2026","time":"04:30","group":"Group F","venue":"Dallas Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260626T033000Z","gcal_end":"20260626T053000Z","ics_start":"20260626T043000","ics_end":"20260626T063000","title":"FIFA WC 2026: Japan vs Sweden","display_date":"Fri 26 Jun"},{"home":"Türkiye","away":"USA","date":"Fri Jun 26 2026","time":"07:30","group":"Group D","venue":"Los Angeles Stadium","suitability":"🟢 Suitable (Morning)","gcal_start":"20260626T063000Z","gcal_end":"20260626T083000Z","ics_start":"20260626T073000","ics_end":"20260626T093000","title":"FIFA WC 2026: Türkiye vs USA","display_date":"Fri 26 Jun"},{"home":"Paraguay","away":"Australia","date":"Fri Jun 26 2026","time":"07:30","group":"Group D","venue":"San Francisco Bay Area Stadium","suitability":"🟢 Suitable (Morning)","gcal_start":"20260626T063000Z","gcal_end":"20260626T083000Z","ics_start":"20260626T073000","ics_end":"20260626T093000","title":"FIFA WC 2026: Paraguay vs Australia","display_date":"Fri 26 Jun"},{"home":"Norway","away":"France","date":"Fri Jun 26 2026","time":"20:00","group":"Group I","venue":"Boston Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260626T190000Z","gcal_end":"20260626T210000Z","ics_start":"20260626T200000","ics_end":"20260626T220000","title":"FIFA WC 2026: Norway vs France","display_date":"Fri 26 Jun"},{"home":"Senegal","away":"Iraq","date":"Fri Jun 26 2026","time":"20:00","group":"Group I","venue":"Toronto Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260626T190000Z","gcal_end":"20260626T210000Z","ics_start":"20260626T200000","ics_end":"20260626T220000","title":"FIFA WC 2026: Senegal vs Iraq","display_date":"Fri 26 Jun"},{"home":"Cabo Verde","away":"Saudi Arabia","date":"Sat Jun 27 2026","time":"01:30","group":"Group H","venue":"Houston Stadium","suitability":"🔴 Too Late / Late Night","gcal_start":"20260627T003000Z","gcal_end":"20260627T023000Z","ics_start":"20260627T013000","ics_end":"20260627T033000","title":"FIFA WC 2026: Cabo Verde vs Saudi Arabia","display_date":"Sat 27 Jun"},{"home":"Uruguay","away":"Spain","date":"Sat Jun 27 2026","time":"01:30","group":"Group H","venue":"Estadio Guadalajara","suitability":"🔴 Too Late / Late Night","gcal_start":"20260627T003000Z","gcal_end":"20260627T023000Z","ics_start":"20260627T013000","ics_end":"20260627T033000","title":"FIFA WC 2026: Uruguay vs Spain","display_date":"Sat 27 Jun"},{"home":"New Zealand","away":"Belgium","date":"Sat Jun 27 2026","time":"04:30","group":"Group G","venue":"Los Angeles Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260627T033000Z","gcal_end":"20260627T053000Z","ics_start":"20260627T043000","ics_end":"20260627T063000","title":"FIFA WC 2026: New Zealand vs Belgium","display_date":"Sat 27 Jun"},{"home":"Egypt","away":"Iran","date":"Sat Jun 27 2026","time":"04:30","group":"Group G","venue":"Seattle Stadium","suitability":"🔴 Too Early / Early Morning","gcal_start":"20260627T033000Z","gcal_end":"20260627T053000Z","ics_start":"20260627T043000","ics_end":"20260627T063000","title":"FIFA WC 2026: Egypt vs Iran","display_date":"Sat 27 Jun"},{"home":"Panama","away":"England","date":"Sat Jun 27 2026","time":"20:00","group":"Group L","venue":"New York/New Jersey Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260627T190000Z","gcal_end":"20260627T210000Z","ics_start":"20260627T200000","ics_end":"20260627T220000","title":"FIFA WC 2026: Panama vs England","display_date":"Sat 27 Jun"},{"home":"Croatia","away":"Ghana","date":"Sat Jun 27 2026","time":"20:00","group":"Group L","venue":"Philadelphia Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260627T190000Z","gcal_end":"20260627T210000Z","ics_start":"20260627T200000","ics_end":"20260627T220000","title":"FIFA WC 2026: Croatia vs Ghana","display_date":"Sat 27 Jun"},{"home":"Colombia","away":"Portugal","date":"Sat Jun 27 2026","time":"23:30","group":"Group K","venue":"Miami Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260627T223000Z","gcal_end":"20260628T003000Z","ics_start":"20260627T233000","ics_end":"20260628T013000","title":"FIFA WC 2026: Colombia vs Portugal","display_date":"Sat 27 Jun"},{"home":"Congo DR","away":"Uzbekistan","date":"Sat Jun 27 2026","time":"23:30","group":"Group K","venue":"Atlanta Stadium","suitability":"🟡 Borderline (Late Night)","gcal_start":"20260627T223000Z","gcal_end":"20260628T003000Z","ics_start":"20260627T233000","ics_end":"20260628T013000","title":"FIFA WC 2026: Congo DR vs Uzbekistan","display_date":"Sat 27 Jun"},{"home":"Algeria","away":"Austria","date":"Sun Jun 28 2026","time":"03:00","group":"Group J","venue":"Kansas City Stadium","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260628T020000Z","gcal_end":"20260628T040000Z","ics_start":"20260628T030000","ics_end":"20260628T050000","title":"FIFA WC 2026: Algeria vs Austria","display_date":"Sun 28 Jun"},{"home":"Jordan","away":"Argentina","date":"Sun Jun 28 2026","time":"03:00","group":"Group J","venue":"Dallas Stadium","suitability":"🔴 Too Late / Early Morning","gcal_start":"20260628T020000Z","gcal_end":"20260628T040000Z","ics_start":"20260628T030000","ics_end":"20260628T050000","title":"FIFA WC 2026: Jordan vs Argentina","display_date":"Sun 28 Jun"},{"home":"🏆 World Cup Final","away":"","date":"Sun Jul 19 2026","time":"20:00","group":"Final","venue":"New York/New Jersey Stadium","suitability":"🟢 Suitable (Prime Evening)","gcal_start":"20260719T190000Z","gcal_end":"20260719T210000Z","ics_start":"20260719T200000","ics_end":"20260719T220000","title":"🏆 FIFA World Cup 2026 Final","display_date":"Sun 19 Jul"}];
-
-// ── FLAGS ──
-function flag(name,size){
-  const s=size||28,h=Math.round(s*0.75);
-  const code=FLAGS[name];
-  if(!code) return `<span class="flag-fb" style="width:${s}px;height:${h}px">${name.slice(0,2).toUpperCase()}</span>`;
-  const cdnSize=s<=20?20:s<=40?40:80;
-  const initials=name.slice(0,2).toUpperCase();
-  return `<img src="https://flagcdn.com/w${cdnSize}/${code}.webp" width="${s}" height="${h}" alt="${name} flag" loading="lazy" style="border-radius:3px;border:1px solid var(--border);object-fit:cover;display:block" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'flag-fb',textContent:'${initials}',style:'width:${s}px;height:${h}px'}))">`;
-}
-
-// ── HELPERS ──
-function sc(s){return s.includes('🟢')?'green':s.includes('🟡')?'yellow':'red'}
-function sl(s){return s.replace(/^[🟢🟡🔴]\s*/,'')}
-function isTn(m){return m.home.includes('Tunisia')||m.away.includes('Tunisia')}
-function gcalUrl(m){return`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(m.title)}&dates=${m.gcal_start}/${m.gcal_end}&details=${encodeURIComponent(m.group+' | '+m.suitability)}&location=${encodeURIComponent(m.venue)}`}
-function dlIcs(i){
-  const m=M[i];
-  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//WC2026//EN','BEGIN:VEVENT',
-    `UID:wc2026-${m.gcal_start}-${i}@tn`,
-    `DTSTART;TZID=Africa/Tunis:${m.ics_start}`,
-    `DTEND;TZID=Africa/Tunis:${m.ics_end}`,
-    `SUMMARY:${m.title}`,`LOCATION:${m.venue}`,
-    `DESCRIPTION:${m.group} | ${m.suitability}`,
-    'END:VEVENT','END:VCALENDAR'].join('\r\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
-  a.download=m.title.replace(/[^\w]/g,'_')+'.ics';a.click();
-}
-
-// ── ESPN NO-KEY LIVE SCORES ──
-// endpoint works from browsers (no CORS restriction), blocked only for server IPs
-const ESPN_URL='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
-
-let liveData={}, lastUpdated=null, refreshTimer=null;
-
-// Normalize ESPN team names to our names
-const ESPN_MAP={
-  'Mexico':'Mexico','Morocco':'Morocco','Canada':'Canada',
-  'Bosnia-Herzegovina':'Bosnia and Herzegovina','Bosnia and Herzegovina':'Bosnia and Herzegovina',
-  'United States':'United States','USA':'United States',
-  'Paraguay':'Paraguay','Qatar':'Qatar','Switzerland':'Switzerland',
-  'Brazil':'Brazil','Haiti':'Haiti','Scotland':'Scotland',
-  'Australia':'Australia','Turkey':'Türkiye','Türkiye':'Türkiye',
-  'Germany':'Germany','Curaçao':'Curaçao','Curacao':'Curaçao',
-  'Netherlands':'Netherlands','Japan':'Japan',
-  "Côte d'Ivoire":'Ivory Coast',"Ivory Coast":'Ivory Coast',
-  'Ecuador':'Ecuador','Sweden':'Sweden','Tunisia':'Tunisia',
-  'Spain':'Spain','Cape Verde':'Cabo Verde','Cabo Verde':'Cabo Verde',
-  'Belgium':'Belgium','Egypt':'Egypt','Saudi Arabia':'Saudi Arabia',
-  'Uruguay':'Uruguay','Iran':'Iran','New Zealand':'New Zealand',
-  'France':'France','Senegal':'Senegal','Iraq':'Iraq',
-  'Norway':'Norway','Argentina':'Argentina','Algeria':'Algeria',
-  'Austria':'Austria','Jordan':'Jordan','Ghana':'Ghana',
-  'Panama':'Panama','England':'England','Croatia':'Croatia',
-  'Portugal':'Portugal','DR Congo':'Congo DR','Congo DR':'Congo DR',
-  'Uzbekistan':'Uzbekistan','Colombia':'Colombia',
-  'South Africa':'South Africa','South Korea':'South Korea',
-  'Czech Republic':'Czechia','Czechia':'Czechia'
+// Country name → ISO2 for flagcdn
+const FLAGS = {
+  'Mexico':'mx','South Africa':'za','South Korea':'kr','Korea Republic':'kr',
+  'Czech Republic':'cz','Czechia':'cz','Canada':'ca',
+  'Bosnia-Herzegovina':'ba','Bosnia and Herzegovina':'ba',
+  'United States':'us','USA':'us','Paraguay':'py',
+  'Qatar':'qa','Switzerland':'ch','Brazil':'br','Morocco':'ma',
+  'Haiti':'ht','Scotland':'gb-sct','Australia':'au',
+  'Turkey':'tr','Türkiye':'tr','Germany':'de',
+  'Curaçao':'cw','Curacao':'cw','Netherlands':'nl','Japan':'jp',
+  "Côte d'Ivoire":'ci','Ivory Coast':'ci','Ecuador':'ec',
+  'Sweden':'se','Tunisia':'tn','Spain':'es',
+  'Cape Verde':'cv','Cabo Verde':'cv','Belgium':'be',
+  'Egypt':'eg','Saudi Arabia':'sa','Uruguay':'uy','Iran':'ir',
+  'New Zealand':'nz','France':'fr','Senegal':'sn','Iraq':'iq',
+  'Norway':'no','Argentina':'ar','Algeria':'dz','Austria':'at',
+  'Jordan':'jo','Ghana':'gh','Panama':'pa','England':'gb-eng',
+  'Croatia':'hr','Portugal':'pt','DR Congo':'cd','Congo DR':'cd',
+  'Uzbekistan':'uz','Colombia':'co','Wales':'gb-wls','Serbia':'rs',
+  'Denmark':'dk','Poland':'pl','Ukraine':'ua','Romania':'ro',
+  'Greece':'gr','Turkey':'tr','Slovakia':'sk','Hungary':'hu',
+  'Slovenia':'si','Israel':'il','Iceland':'is','Finland':'fi',
+  'Kosovo':'xk','Albania':'al','Montenegro':'me','Armenia':'am',
+  'Georgia':'ge','Kazakhstan':'kz','Luxembourg':'lu','Azerbaijan':'az',
+  'Faroe Islands':'fo','Gibraltar':'gi','Malta':'mt','Andorra':'ad',
+  'Liechtenstein':'li','San Marino':'sm','Moldova':'md',
+  'Latvia':'lv','Lithuania':'lt','Estonia':'ee','Belarus':'by',
+  'North Macedonia':'mk','Bosnia':'ba'
 };
 
-async function fetchLiveScores(){
-  try{
-    const today=new Date();
-    const ymd=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
-    const r=await fetch(`${ESPN_URL}?dates=${ymd}`,{headers:{'Accept':'application/json'}});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const data=await r.json();
-    liveData={};
-    (data.events||[]).forEach(ev=>{
-      const comp=ev.competitions?.[0];
-      if(!comp) return;
-      const teams=comp.competitors||[];
-      const home=teams.find(t=>t.homeAway==='home');
-      const away=teams.find(t=>t.homeAway==='away');
-      if(!home||!away) return;
-      const hn=ESPN_MAP[home.team.displayName]||home.team.displayName;
-      const an=ESPN_MAP[away.team.displayName]||away.team.displayName;
-      const st=comp.status?.type?.name||'';
-      const clock=comp.status?.displayClock||'';
-      liveData[hn+'|'+an]={
-        status:st, // STATUS_IN_PROGRESS, STATUS_FINAL, STATUS_SCHEDULED
-        homeScore:home.score||'0',
-        awayScore:away.score||'0',
-        clock:clock,
-        period:comp.status?.period||0
-      };
-    });
-    lastUpdated=new Date();
-    const active=document.querySelector('.fb.active');
-    if(active?.dataset.f==='today') renderToday();
-    else updateScoreBadges();
-  } catch(e){
-    console.warn('ESPN fetch failed:',e.message);
-    // silently fail — no UI error, scores just won't show
+// Global state
+let ALL_MATCHES = [];   // normalised match objects
+let LIVE = {};          // key → live score data
+let lastFetch = null;
+let refreshTimer = null;
+let currentFilter = 'all';
+
+// ── UTILS ──
+function flagImg(name, size=28) {
+  const h = Math.round(size * 0.75);
+  const code = FLAGS[name];
+  if (!code) return `<span class="flag-fb" style="width:${size}px;height:${h}px">${name.slice(0,2).toUpperCase()}</span>`;
+  const cdnSize = size <= 20 ? 20 : size <= 40 ? 40 : 80;
+  const ini = name.slice(0,2).toUpperCase();
+  return `<img src="https://flagcdn.com/w${cdnSize}/${code}.webp" width="${size}" height="${h}" alt="${name}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'flag-fb',textContent:'${ini}',style:'width:${size}px;height:${h}px'}))">`;
+}
+
+// Convert UTC date string → Tunisia local time string "HH:MM"
+function toTunisiaTime(utcStr) {
+  const d = new Date(utcStr);
+  const h = (d.getUTCHours() + TZ_OFFSET) % 24;
+  const m = d.getUTCMinutes();
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+// Display date in Tunisia tz "Mon 15 Jun"
+function toTunisiaDate(utcStr) {
+  const d = new Date(new Date(utcStr).getTime() + TZ_OFFSET * 3600000);
+  return d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'});
+}
+
+// Today string in Tunisia tz
+function todayTunisia() {
+  const d = new Date(Date.now() + TZ_OFFSET * 3600000);
+  return d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'});
+}
+
+// Watch suitability based on Tunisia local hour
+function suitability(utcStr) {
+  const d = new Date(utcStr);
+  const h = (d.getUTCHours() + TZ_OFFSET) % 24;
+  if (h >= 15 && h <= 23) return {cls:'green', label:'Good time', icon:'🟢'};
+  if ((h >= 12 && h < 15) || (h === 0)) return {cls:'yellow', label:'Borderline', icon:'🟡'};
+  return {cls:'red', label:'Rough hours', icon:'🔴'};
+}
+
+function isTunisia(m) {
+  return m.home.includes('Tunisia') || m.away.includes('Tunisia');
+}
+
+function gcalUrl(m) {
+  const fmt = d => d.replace(/[-:]/g,'').replace('.000Z','Z');
+  const start = fmt(new Date(new Date(m.utcDate).getTime()).toISOString());
+  const end = fmt(new Date(new Date(m.utcDate).getTime() + 7200000).toISOString());
+  const title = m.isFinal ? '🏆 FIFA World Cup 2026 Final' : `FIFA WC 2026: ${m.home} vs ${m.away}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&location=${encodeURIComponent(m.venue)}`;
+}
+
+function dlIcs(idx) {
+  const m = ALL_MATCHES[idx];
+  const fmt = d => d.replace(/[-:.Z]/g,'').slice(0,15);
+  const start = fmt(new Date(new Date(m.utcDate).getTime() + TZ_OFFSET*3600000).toISOString());
+  const end   = fmt(new Date(new Date(m.utcDate).getTime() + TZ_OFFSET*3600000 + 7200000).toISOString());
+  const title = m.isFinal ? '🏆 FIFA World Cup 2026 Final' : `FIFA WC 2026: ${m.home} vs ${m.away}`;
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//WC2026//EN','BEGIN:VEVENT',
+    `UID:wc2026-${idx}-${start}@tn`,
+    `DTSTART;TZID=Africa/Tunis:${start}`,
+    `DTEND;TZID=Africa/Tunis:${end}`,
+    `SUMMARY:${title}`,
+    `LOCATION:${m.venue}`,
+    `DESCRIPTION:${m.round} | ${m.suit.icon} ${m.suit.label}`,
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], {type:'text/calendar'}));
+  a.download = title.replace(/[^\w]/g,'_') + '.ics';
+  a.click();
+}
+
+// ── ESPN FETCH ──
+async function fetchAll() {
+  setStatus('loading', 'Loading…');
+  try {
+    // Fetch all WC 2026 matches — use date range
+    const dates = '20260611-20260719';
+    const url = `${ESPN}?dates=${dates}&limit=100`;
+    const r = await fetch(url, {headers:{'Accept':'application/json'}});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    parseMatches(data.events || []);
+    setStatus('ok', `${ALL_MATCHES.length} matches loaded`);
+  } catch(e) {
+    // ESPN blocked or tournament not started yet — use static fallback
+    console.warn('ESPN fetch failed:', e.message, '— using static fallback');
+    loadStaticFallback();
+    setStatus('err', 'Live data unavailable — showing static schedule');
   }
 }
 
-function scoreHtml(key){
-  const d=liveData[key];
-  if(!d) return '';
-  if(d.status==='STATUS_IN_PROGRESS'){
-    return `<div class="score-bar">
-      <span class="score-num">${d.homeScore}</span>
+async function fetchLive() {
+  try {
+    const d = new Date();
+    const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    const r = await fetch(`${ESPN}?dates=${ymd}`, {headers:{'Accept':'application/json'}});
+    if (!r.ok) return;
+    const data = await r.json();
+    LIVE = {};
+    (data.events || []).forEach(ev => {
+      const comp = ev.competitions?.[0];
+      if (!comp) return;
+      const home = comp.competitors?.find(c => c.homeAway === 'home');
+      const away = comp.competitors?.find(c => c.homeAway === 'away');
+      if (!home || !away) return;
+      const key = (home.team.displayName + '|' + away.team.displayName).toLowerCase();
+      LIVE[key] = {
+        status: comp.status?.type?.name,
+        clock: comp.status?.displayClock || '',
+        homeScore: home.score ?? '',
+        awayScore: away.score ?? '',
+      };
+    });
+    lastFetch = new Date();
+    // Update score badges without full re-render
+    document.querySelectorAll('.mc[data-lk]').forEach(card => {
+      const key = card.dataset.lk;
+      const si = card.querySelector('.si');
+      if (si) si.innerHTML = scoreHtml(key);
+      const d = LIVE[key];
+      card.classList.toggle('live-now', !!(d && d.status === 'STATUS_IN_PROGRESS'));
+    });
+    // Update today header if visible
+    const updEl = document.getElementById('upd-time');
+    if (updEl) updEl.textContent = `Updated ${lastFetch.toLocaleTimeString()}`;
+    updateLiveCount();
+  } catch(e) { /* silent */ }
+}
+
+function parseMatches(events) {
+  ALL_MATCHES = [];
+  events.forEach(ev => {
+    const comp = ev.competitions?.[0];
+    if (!comp) return;
+    const home = comp.competitors?.find(c => c.homeAway === 'home');
+    const away = comp.competitors?.find(c => c.homeAway === 'away');
+    const homeName = home?.team?.displayName || 'TBD';
+    const awayName = away?.team?.displayName || 'TBD';
+    const utcDate = ev.date;
+    const suit = suitability(utcDate);
+    const round = comp.series?.type?.abbreviation
+      || ev.season?.type?.abbreviation
+      || comp.notes?.[0]?.headline
+      || 'Group Stage';
+    ALL_MATCHES.push({
+      id: ev.id,
+      home: homeName,
+      away: awayName,
+      utcDate,
+      timeStr: toTunisiaTime(utcDate),
+      dateStr: toTunisiaDate(utcDate),
+      venue: comp.venue?.fullName || comp.venue?.address?.city || 'USA',
+      round: round,
+      suit,
+      lk: (homeName + '|' + awayName).toLowerCase(),
+      isFinal: round.toLowerCase().includes('final') && !round.toLowerCase().includes('semi') && !round.toLowerCase().includes('quarter'),
+    });
+  });
+  // Sort by date
+  ALL_MATCHES.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+  updateStats();
+  renderCurrent();
+}
+
+// ── STATIC FALLBACK ──
+function loadStaticFallback() {
+  const raw=[["Mexico","South Africa","2026-06-11T23:00:00Z","Mexico City Stadium","Group A"],["South Korea","Czechia","2026-06-12T06:00:00Z","Estadio Guadalajara","Group A"],["Canada","Bosnia and Herzegovina","2026-06-12T23:00:00Z","Toronto Stadium","Group B"],["United States","Paraguay","2026-06-13T05:00:00Z","Los Angeles Stadium","Group D"],["Qatar","Switzerland","2026-06-13T23:00:00Z","San Francisco Bay Area Stadium","Group B"],["Brazil","Morocco","2026-06-14T02:00:00Z","New York/New Jersey Stadium","Group C"],["Haiti","Scotland","2026-06-14T05:00:00Z","Boston Stadium","Group C"],["Australia","Türkiye","2026-06-14T08:00:00Z","BC Place Vancouver","Group D"],["Germany","Curaçao","2026-06-14T21:00:00Z","Houston Stadium","Group E"],["Netherlands","Japan","2026-06-15T00:00:00Z","Dallas Stadium","Group F"],["Ivory Coast","Ecuador","2026-06-15T03:00:00Z","Philadelphia Stadium","Group E"],["Sweden","Tunisia","2026-06-15T06:00:00Z","Estadio Monterrey","Group F"],["Spain","Cabo Verde","2026-06-15T20:00:00Z","Atlanta Stadium","Group H"],["Belgium","Egypt","2026-06-15T23:00:00Z","Seattle Stadium","Group G"],["Saudi Arabia","Uruguay","2026-06-16T02:00:00Z","Miami Stadium","Group H"],["Iran","New Zealand","2026-06-16T05:00:00Z","Los Angeles Stadium","Group G"],["France","Senegal","2026-06-16T23:00:00Z","New York/New Jersey Stadium","Group I"],["Iraq","Norway","2026-06-17T02:00:00Z","Boston Stadium","Group I"],["Argentina","Algeria","2026-06-17T05:00:00Z","Kansas City Stadium","Group J"],["Austria","Jordan","2026-06-17T08:00:00Z","San Francisco Bay Area Stadium","Group J"],["Ghana","Panama","2026-06-17T23:00:00Z","Toronto Stadium","Group L"],["England","Croatia","2026-06-18T02:00:00Z","Dallas Stadium","Group L"],["Portugal","Congo DR","2026-06-18T05:00:00Z","Houston Stadium","Group K"],["Uzbekistan","Colombia","2026-06-18T08:00:00Z","Mexico City Stadium","Group K"],["Czechia","South Africa","2026-06-18T21:00:00Z","Atlanta Stadium","Group A"],["Switzerland","Bosnia and Herzegovina","2026-06-19T00:00:00Z","Los Angeles Stadium","Group B"],["Canada","Qatar","2026-06-19T03:00:00Z","BC Place Vancouver","Group B"],["Mexico","South Korea","2026-06-19T06:00:00Z","Estadio Guadalajara","Group A"],["USA","Australia","2026-06-19T23:00:00Z","Seattle Stadium","Group D"],["Scotland","Morocco","2026-06-20T02:00:00Z","Boston Stadium","Group C"],["Türkiye","Paraguay","2026-06-20T05:00:00Z","San Francisco Bay Area Stadium","Group D"],["Brazil","Haiti","2026-06-20T08:00:00Z","Philadelphia Stadium","Group C"],["Germany","Ivory Coast","2026-06-21T00:00:00Z","Toronto Stadium","Group E"],["Ecuador","Curaçao","2026-06-21T03:00:00Z","Kansas City Stadium","Group E"],["Tunisia","Japan","2026-06-21T07:00:00Z","Estadio Monterrey","Group F"],["Spain","Saudi Arabia","2026-06-22T00:00:00Z","Atlanta Stadium","Group H"],["Belgium","Iran","2026-06-22T03:00:00Z","Los Angeles Stadium","Group G"],["Uruguay","Cabo Verde","2026-06-22T06:00:00Z","Miami Stadium","Group H"],["New Zealand","Egypt","2026-06-22T08:00:00Z","BC Place Vancouver","Group G"],["Argentina","Austria","2026-06-23T02:00:00Z","Dallas Stadium","Group J"],["France","Iraq","2026-06-23T05:00:00Z","Philadelphia Stadium","Group I"],["Norway","Senegal","2026-06-23T08:00:00Z","New York/New Jersey Stadium","Group I"],["Jordan","Algeria","2026-06-23T23:00:00Z","San Francisco Bay Area Stadium","Group J"],["Portugal","Uzbekistan","2026-06-24T02:00:00Z","Houston Stadium","Group K"],["England","Ghana","2026-06-24T05:00:00Z","Boston Stadium","Group L"],["Panama","Croatia","2026-06-24T08:00:00Z","Toronto Stadium","Group L"],["Colombia","Congo DR","2026-06-24T08:00:00Z","Estadio Guadalajara","Group K"],["Switzerland","Canada","2026-06-24T23:00:00Z","BC Place Vancouver","Group B"],["Bosnia and Herzegovina","Qatar","2026-06-24T23:00:00Z","Seattle Stadium","Group B"],["Morocco","Haiti","2026-06-25T02:00:00Z","Atlanta Stadium","Group C"],["Scotland","Brazil","2026-06-25T02:00:00Z","Miami Stadium","Group C"],["South Africa","South Korea","2026-06-25T06:00:00Z","Estadio Monterrey","Group A"],["Czechia","Mexico","2026-06-25T06:00:00Z","Mexico City Stadium","Group A"],["Curaçao","Ivory Coast","2026-06-26T00:00:00Z","Philadelphia Stadium","Group E"],["Ecuador","Germany","2026-06-26T00:00:00Z","New York/New Jersey Stadium","Group E"],["Tunisia","Netherlands","2026-06-26T07:30:00Z","Kansas City Stadium","Group F"],["Japan","Sweden","2026-06-26T07:30:00Z","Dallas Stadium","Group F"],["Türkiye","USA","2026-06-26T10:30:00Z","Los Angeles Stadium","Group D"],["Paraguay","Australia","2026-06-26T10:30:00Z","San Francisco Bay Area Stadium","Group D"],["Norway","France","2026-06-26T23:00:00Z","Boston Stadium","Group I"],["Senegal","Iraq","2026-06-26T23:00:00Z","Toronto Stadium","Group I"],["Cabo Verde","Saudi Arabia","2026-06-27T04:30:00Z","Houston Stadium","Group H"],["Uruguay","Spain","2026-06-27T04:30:00Z","Estadio Guadalajara","Group H"],["New Zealand","Belgium","2026-06-27T07:30:00Z","Los Angeles Stadium","Group G"],["Egypt","Iran","2026-06-27T07:30:00Z","Seattle Stadium","Group G"],["Panama","England","2026-06-27T23:00:00Z","New York/New Jersey Stadium","Group L"],["Croatia","Ghana","2026-06-27T23:00:00Z","Philadelphia Stadium","Group L"],["Colombia","Portugal","2026-06-28T02:30:00Z","Miami Stadium","Group K"],["Congo DR","Uzbekistan","2026-06-28T02:30:00Z","Atlanta Stadium","Group K"],["Algeria","Austria","2026-06-28T06:00:00Z","Kansas City Stadium","Group J"],["Jordan","Argentina","2026-06-28T06:00:00Z","Dallas Stadium","Group J"],["TBD","TBD","2026-07-19T23:00:00Z","New York/New Jersey Stadium","Final"]];
+  ALL_MATCHES = raw.map(([home,away,utcDate,venue,round]) => {
+    const suit = suitability(utcDate);
+    return {home,away,utcDate,timeStr:toTunisiaTime(utcDate),dateStr:toTunisiaDate(utcDate),venue,round,suit,lk:(home+'|'+away).toLowerCase(),isFinal:round==='Final'};
+  });
+  updateStats();
+  renderCurrent();
+}
+
+// ── STATS ──
+function updateStats() {
+  let g=0,y=0,r=0,tn=0;
+  ALL_MATCHES.forEach(m => {
+    if(m.suit.cls==='green')g++; else if(m.suit.cls==='yellow')y++; else r++;
+    if(isTunisia(m))tn++;
+  });
+  document.getElementById('cg').textContent=g;
+  document.getElementById('cy').textContent=y;
+  document.getElementById('cr').textContent=r;
+  document.getElementById('ctn').textContent=tn;
+  document.getElementById('ctotal').textContent=ALL_MATCHES.length;
+  document.getElementById('totalSp').style.display='flex';
+}
+
+function updateLiveCount() {
+  const liveCount = Object.values(LIVE).filter(d=>d.status==='STATUS_IN_PROGRESS').length;
+  const btn = document.getElementById('todayBtn');
+  if (liveCount > 0) btn.textContent = `📅 Today · ${liveCount} LIVE`;
+  else btn.textContent = '📅 Today';
+}
+
+// ── SCORE HTML ──
+function scoreHtml(lk) {
+  const d = LIVE[lk];
+  if (!d || !d.status || d.status === 'STATUS_SCHEDULED') return '';
+  if (d.status === 'STATUS_IN_PROGRESS') {
+    return `<div class="score-wrap">
+      <span class="score-n">${d.homeScore}</span>
       <span class="score-sep">–</span>
-      <span class="score-num">${d.awayScore}</span>
+      <span class="score-n">${d.awayScore}</span>
       <span class="live-badge"><span class="live-pulse"></span>${d.clock||'LIVE'}</span>
     </div>`;
   }
-  if(d.status==='STATUS_FINAL'){
-    return `<div class="score-bar">
-      <span class="score-num">${d.homeScore}</span>
+  if (d.status === 'STATUS_FINAL') {
+    return `<div class="score-wrap">
+      <span class="score-n">${d.homeScore}</span>
       <span class="score-sep">–</span>
-      <span class="score-num">${d.awayScore}</span>
-      <span style="font-size:.62rem;color:var(--text-faint);margin-left:4px">FT</span>
-    </div>`;
-  }
-  if(d.status==='STATUS_SCHEDULED'){
-    return `<div class="status-ns">Scheduled</div>`;
+      <span class="score-n">${d.awayScore}</span>
+    </div><div class="score-ft">Full time</div>`;
   }
   return '';
 }
 
-function updateScoreBadges(){
-  document.querySelectorAll('.mc[data-lkey]').forEach(card=>{
-    const key=card.dataset.lkey;
-    const el=card.querySelector('.score-inject');
-    if(el) el.innerHTML=scoreHtml(key);
-    const d=liveData[key];
-    card.classList.toggle('live-now',!!(d&&d.status==='STATUS_IN_PROGRESS'));
-  });
-}
+// ── CARD ──
+function buildCard(m, idx) {
+  const tn = isTunisia(m) ? ' tn' : '';
+  const fin = m.isFinal ? ' fin-match' : '';
+  const bCls = m.isFinal ? ' fin-b' : m.round.toLowerCase().includes('round')||m.round.toLowerCase().includes('quarter')||m.round.toLowerCase().includes('semi') ? ' ko-b' : '';
+  const isTBD = m.home === 'TBD' || m.away === 'TBD';
 
-// ── TODAY ──
-function todayStr(){
-  const d=new Date();
-  return new Date(d.getFullYear(),d.getMonth(),d.getDate()).toDateString();
-}
-function isTodayMatch(m){
-  return new Date(m.date).toDateString()===todayStr();
-}
-
-function renderToday(){
-  const el=document.getElementById('schedule');
-  const todayMatches=M.map((m,i)=>({m,i})).filter(({m})=>isTodayMatch(m));
-  if(!todayMatches.length){
-    el.innerHTML='<p class="empty">No matches today. Check the full schedule below.</p>';
-    return;
-  }
-  const liveCount=todayMatches.filter(({m})=>{
-    const d=liveData[m.home+'|'+m.away];
-    return d&&d.status==='STATUS_IN_PROGRESS';
-  }).length;
-  const upd=lastUpdated?`<span class="last-updated">Updated ${lastUpdated.toLocaleTimeString()}</span>`:'';
-  let html=`<div class="today-section">
-    <div class="today-header">
-      <span class="today-lbl">Today · ${new Date().toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'})}</span>
-      ${liveCount?`<span class="today-live-count">${liveCount} LIVE</span>`:''}
-      <button class="refresh-btn" onclick="fetchLiveScores()">↻ Refresh</button>
-      ${upd}
-    </div>
-    <div class="day-grid">`;
-  todayMatches.forEach(({m,i})=>{ html+=buildCard(m,i); });
-  html+='</div></div>';
-  el.innerHTML=html;
-}
-
-// ── CARD BUILDER ──
-function buildCard(m,i){
-  const s=sc(m.suitability),tn=isTn(m)?' tn':'',fin=m.group==='Final'?' fin':'';
-  const badgeCls=m.group==='Final'?' fin-b':'';
-  const lkey=m.home+'|'+m.away;
-  const teamsHtml=m.group==='Final'
-    ?`<div class="fin-teams"><span class="fin-lbl">🏆 World Cup Final</span></div>`
-    :`<div class="mc-teams">
-        <div class="mc-team">${flag(m.home,28)}<span class="tname">${m.home}</span></div>
+  const teamsHtml = isTBD
+    ? `<div class="tbd-teams"><span class="tbd-lbl">🏆 ${m.round === 'Final' ? 'World Cup Final' : m.round}</span></div>`
+    : `<div class="mc-teams">
+        <div class="mc-team">${flagImg(m.home,28)}<span class="tname">${m.home}</span></div>
         <div class="mc-vs">vs</div>
-        <div class="mc-team">${flag(m.away,28)}<span class="tname">${m.away}</span></div>
+        <div class="mc-team">${flagImg(m.away,28)}<span class="tname">${m.away}</span></div>
       </div>`;
-  return `<div class="mc${tn}${fin}" data-lkey="${lkey}">
+
+  const title = m.isFinal ? '🏆 FIFA World Cup 2026 Final' : `FIFA WC 2026: ${m.home} vs ${m.away}`;
+
+  return `<div class="mc${tn}${fin}" data-lk="${m.lk}">
     <div class="mc-top">
-      <span class="mc-badge${badgeCls}">${m.group}</span>
+      <span class="mc-badge${bCls}">${m.round}</span>
       <div class="mc-time-wrap">
-        <span class="mc-time">${m.time}</span>
-        <span class="mc-dot d${s[0]}"></span>
+        <span class="mc-time">${m.timeStr}</span>
+        <span class="mc-cdot d${m.suit.cls[0]}"></span>
       </div>
     </div>
     ${teamsHtml}
-    <div class="score-inject">${scoreHtml(lkey)}</div>
+    <div class="si">${scoreHtml(m.lk)}</div>
     <div class="mc-meta">
       <span class="mc-venue">${m.venue}</span>
-      <span class="mc-suit sc-${s}">${sl(m.suitability)}</span>
+      <span class="mc-suit sc-${m.suit.cls}">${m.suit.icon} ${m.suit.label}</span>
     </div>
     <div class="mc-cal">
       <a class="cbtn cg" href="${gcalUrl(m)}" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5C3.9 4 3 4.9 3 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
         Google Cal
       </a>
-      <button class="cbtn ci" onclick="dlIcs(${i})">
+      <button class="cbtn ci" onclick="dlIcs(${idx})">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a1 1 0 110 2 1 1 0 010-2zm4 11H8v-1.5l3-3 1.5 1.5 3-3 1.5 1.5V17z"/></svg>
         .ics
       </button>
@@ -401,55 +497,88 @@ function buildCard(m,i){
 }
 
 // ── RENDER ──
-function render(filter){
-  if(filter==='today'){ renderToday(); return; }
-  const byDate={};
-  M.forEach((m,i)=>{
-    const show=filter==='all'?true:filter==='tn'?isTn(m):filter==='green'?m.suitability.includes('🟢'):m.suitability.includes('🟡');
-    if(!show)return;
-    if(!byDate[m.display_date])byDate[m.display_date]=[];
-    byDate[m.display_date].push({m,i});
-  });
-  let html='';
-  for(const[date,items] of Object.entries(byDate)){
-    html+=`<div class="day-block"><div class="day-lbl">${date}</div><div class="day-grid">`;
-    items.forEach(({m,i})=>{ html+=buildCard(m,i); });
-    html+='</div></div>';
+function renderCurrent() { render(currentFilter); }
+
+function render(filter) {
+  currentFilter = filter;
+  const el = document.getElementById('schedule');
+
+  let matches = ALL_MATCHES.map((m,i) => ({m,i}));
+
+  if (filter === 'today') {
+    const today = todayTunisia();
+    matches = matches.filter(({m}) => m.dateStr === today);
+    if (!matches.length) {
+      el.innerHTML = '<p class="msg">No matches today.</p>';
+      return;
+    }
+    const liveCount = matches.filter(({m}) => LIVE[m.lk]?.status === 'STATUS_IN_PROGRESS').length;
+    const upd = lastFetch ? `<span class="upd-time" id="upd-time">Updated ${lastFetch.toLocaleTimeString()}</span>` : '<span class="upd-time" id="upd-time"></span>';
+    let html = `<div style="margin-bottom:24px">
+      <div class="today-hdr">
+        <span class="today-lbl">Today · ${today}</span>
+        ${liveCount ? `<span class="live-count">${liveCount} LIVE</span>` : ''}
+        <button class="refresh-btn" onclick="fetchLive()">↻ Refresh</button>
+        ${upd}
+      </div>
+      <div class="day-grid">`;
+    matches.forEach(({m,i}) => { html += buildCard(m,i); });
+    html += '</div></div>';
+    el.innerHTML = html;
+    return;
   }
-  document.getElementById('schedule').innerHTML=html||'<p class="empty">No matches for this filter.</p>';
+
+  if (filter === 'tn') matches = matches.filter(({m}) => isTunisia(m));
+  else if (filter === 'green') matches = matches.filter(({m}) => m.suit.cls === 'green');
+  else if (filter === 'yellow') matches = matches.filter(({m}) => m.suit.cls === 'yellow');
+
+  if (!matches.length) { el.innerHTML = '<p class="msg">No matches for this filter.</p>'; return; }
+
+  // Group by date
+  const byDate = {};
+  matches.forEach(({m,i}) => {
+    if (!byDate[m.dateStr]) byDate[m.dateStr] = [];
+    byDate[m.dateStr].push({m,i});
+  });
+
+  let html = '';
+  for (const [date, items] of Object.entries(byDate)) {
+    html += `<div class="day-block"><div class="day-lbl">${date}</div><div class="day-grid">`;
+    items.forEach(({m,i}) => { html += buildCard(m,i); });
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
 }
 
-// ── STATS ──
-let g=0,y=0,r=0;
-M.forEach(m=>{const s=sc(m.suitability);s==='green'?g++:s==='yellow'?y++:r++;});
-document.getElementById('cg').textContent=g;
-document.getElementById('cy').textContent=y;
-document.getElementById('cr').textContent=r;
+// ── STATUS ──
+function setStatus(type, msg) {
+  const dot = document.getElementById('apiDot');
+  const txt = document.getElementById('apiTxt');
+  dot.className = 'api-status-dot ' + {ok:'dot-ok',loading:'dot-loading',err:'dot-err'}[type];
+  txt.textContent = msg;
+}
 
 // ── FILTERS ──
-document.querySelectorAll('.fb').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.fb').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.fb').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.fb').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     render(b.dataset.f);
-    if(b.dataset.f==='today') fetchLiveScores();
+    if (b.dataset.f === 'today') fetchLive();
   });
 });
 
 // ── THEME ──
-function applyTheme(dark){
-  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-  document.getElementById('themeBtn').textContent=dark?'☀️ Light':'🌙 Dark';
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = dark ? '☀️ Light' : '🌙 Dark';
 }
-function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')!=='dark')}
+function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'); }
 applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
 
 // ── INIT ──
-render('all');
-// Fetch scores silently on load — works once WC 2026 starts
-fetchLiveScores();
-// Auto-refresh every 60s
-refreshTimer=setInterval(fetchLiveScores,60000);
+fetchAll();
+refreshTimer = setInterval(fetchLive, 60000);
 </script>
 </body>
 </html>
