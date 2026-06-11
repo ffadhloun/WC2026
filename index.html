@@ -283,7 +283,7 @@ async function fetchSchedule() {
   setStatus('loading','Loading…');
   try {
     // Fetch all WC dates in one call
-    const r = await fetch(`${ESPN_BASE}/scoreboard?dates=20260611-20260719&limit=100`);
+    const r = await fetch(`${ESPN_BASE}/scoreboard?dates=20260611-20260719&limit=110`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     const events = data.events || [];
