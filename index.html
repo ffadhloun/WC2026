@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIFA World Cup 2026 – Tunisia Time</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNjQgNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjMyIiBmaWxsPSIjZDQyZTM1Ii8+CjxnIGZpbGw9IiNmNWM1NDIiPgo8cGF0aCBkPSJNMjIgMTZoMjB2M2MwIDItMSA0LTMgNWwtMSAxYy0xIDUtMyA5LTYgOXMtNS00LTYtOWwtMS0xYy0yLTEtMy0zLTMtNXYtM3oiLz4KPHJlY3QgeD0iMjkiIHk9IjMzIiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiByeD0iMSIvPgo8cmVjdCB4PSIyNCIgeT0iNDAiIHdpZHRoPSIxNiIgaGVpZ2h0PSI0IiByeD0iMSIvPgo8cmVjdCB4PSIyMiIgeT0iNDUiIHdpZHRoPSIyMCIgaGVpZ2h0PSIzIiByeD0iMSIvPgo8cGF0aCBkPSJNMTggMThjLTMgMC01IDItNSA1czIgNSA1IDV2LTNjLTEgMC0yLTEtMi0yczEtMiAyLTJ2LTN6Ii8+CjxwYXRoIGQ9Ik00NiAxOGMzIDAgNSAyIDUgNXMtMiA1LTUgNXYtM2MxIDAgMi0xIDItMnMtMS0yLTItMnYtM3oiLz4KPC9nPgo8L3N2Zz4K">
 <style>
 :root{
   --bg:#f2f1ed;--surface:#fff;--surface2:#eceae5;--border:rgba(0,0,0,0.08);
@@ -211,12 +212,52 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .pn-player{font-size:.7rem;color:var(--text-muted);padding:2px 0;display:flex;gap:6px}
 .pn-player .num{color:var(--text-faint);min-width:18px;text-align:right}
 
-@media(max-width:480px){
+@media(max-width:680px){
   .hdr{padding:10px 14px}
   .fbar{top:43px}
   .mc-team img,.flag-fb{width:22px!important;height:16px!important}
   .sn{font-size:1.1rem}
-  .match-panel{width:100vw}
+
+  /* Bottom sheet instead of side drawer */
+  .match-panel{
+    width:100%;max-width:100%;
+    top:auto;bottom:0;left:0;right:0;
+    height:88vh;max-height:88vh;
+    border-left:none;border-top:1px solid var(--border);
+    border-radius:16px 16px 0 0;
+    box-shadow:0 -4px 24px rgba(0,0,0,.18);
+    transform:translateY(100%);
+  }
+  .match-panel.open{transform:translateY(0)}
+
+  /* Drag handle */
+  .panel-hdr{
+    padding:10px 16px 12px;
+    position:relative;
+  }
+  .panel-hdr::before{
+    content:'';position:absolute;top:6px;left:50%;
+    transform:translateX(-50%);
+    width:36px;height:4px;border-radius:2px;
+    background:var(--border-strong);
+  }
+  .panel-title{padding-top:8px;font-size:.85rem}
+  .panel-close{width:30px;height:30px;font-size:.9rem;margin-top:6px}
+
+  .panel-body{padding:12px 14px 24px;-webkit-overflow-scrolling:touch}
+
+  /* Tighter score header on mobile */
+  .pn-score{gap:10px;padding:8px 0 14px}
+  .pn-team img{width:34px!important;height:25px!important}
+  .pn-team .pn-tname{font-size:.74rem}
+  .pn-score-nums{font-size:1.5rem;gap:6px}
+
+  /* Lineups stack instead of side-by-side on very small screens */
+  .pn-lineup-cols{gap:8px}
+}
+
+@media(max-width:380px){
+  .pn-lineup-cols{flex-direction:column;gap:14px}
 }
 </style>
 </head>
@@ -270,7 +311,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 <div class="panel-overlay" id="panelOverlay" onclick="closeMatchPanel()"></div>
 <aside class="match-panel" id="matchPanel">
-  <div class="panel-hdr">
+  <div class="panel-hdr" id="panelHdr">
     <span class="panel-title" id="panelTitle">Match details</span>
     <button class="panel-close" onclick="closeMatchPanel()">✕</button>
   </div>
@@ -617,8 +658,47 @@ async function openMatchPanel(idx) {
 function closeMatchPanel() {
   document.getElementById('panelOverlay').classList.remove('open');
   document.getElementById('matchPanel').classList.remove('open');
+  document.getElementById('matchPanel').style.transform = '';
   document.body.style.overflow = '';
 }
+
+// ── Swipe-down-to-close (mobile bottom sheet) ──
+(function initSwipeToClose() {
+  const panel = document.getElementById('matchPanel');
+  const header = document.getElementById('panelHdr') || panel.querySelector('.panel-hdr');
+  let startY = 0, currentY = 0, dragging = false;
+
+  function onStart(e) {
+    if (window.innerWidth > 680) return; // only on mobile bottom-sheet
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    dragging = true;
+    panel.style.transition = 'none';
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    currentY = (e.touches ? e.touches[0].clientY : e.clientY);
+    const delta = Math.max(0, currentY - startY);
+    panel.style.transform = `translateY(${delta}px)`;
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.transition = '';
+    const delta = Math.max(0, currentY - startY);
+    if (delta > 100) {
+      closeMatchPanel();
+    } else {
+      panel.style.transform = 'translateY(0)';
+    }
+  }
+
+  header.addEventListener('touchstart', onStart, {passive:true});
+  header.addEventListener('touchmove', onMove, {passive:true});
+  header.addEventListener('touchend', onEnd);
+  header.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+})();
 
 function buildPanelDetails(data, m) {
   let html = '';
