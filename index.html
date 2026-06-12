@@ -57,6 +57,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .fb.fg.active{background:var(--green);border-color:var(--green);color:#fff}
 .fb.fy.active{background:var(--yellow);border-color:var(--yellow);color:#fff}
 .fb.ft.active{background:var(--gcal);border-color:var(--gcal);color:#fff}
+.fb.fs.active{background:var(--gold);border-color:var(--gold);color:#fff}
+
+/* ── STANDINGS ── */
+.standings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.std-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.std-card.tn-group{border-left:3px solid var(--accent)}
+.std-hdr{padding:8px 12px;border-bottom:1px solid var(--border);font-size:.78rem;font-weight:700;background:var(--surface2)}
+.std-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.std-table th{text-align:center;font-weight:600;color:var(--text-faint);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;padding:6px 4px;border-bottom:1px solid var(--border)}
+.std-table th.team-col{text-align:left;padding-left:10px}
+.std-table td{text-align:center;padding:6px 4px;border-bottom:1px solid var(--border)}
+.std-table tr:last-child td{border-bottom:none}
+.std-table td.team-cell{text-align:left;padding-left:10px;display:flex;align-items:center;gap:6px;font-weight:600;color:var(--text)}
+.std-table td.team-cell img{width:18px;height:13px;border-radius:2px;border:1px solid var(--border);flex-shrink:0}
+.std-table td.pts{font-weight:700;color:var(--text)}
+.std-row-tn{background:var(--accent);background:rgba(212,46,53,.06)}
+[data-theme="dark"] .std-row-tn{background:rgba(232,71,78,.1)}
+.std-rank{font-size:.68rem;color:var(--text-faint);width:20px}
+.qualify-line td{border-bottom:2px solid var(--green)!important}
 
 /* ── LAYOUT ── */
 .main{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
@@ -179,6 +198,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <button class="fb fg" data-f="green">🟢 Good hours</button>
     <button class="fb fy" data-f="yellow">🟡 Borderline</button>
     <button class="fb ft" data-f="today" id="btn-today">📅 Today</button>
+    <button class="fb fs" data-f="standings" id="btn-standings">📊 Standings</button>
   </div>
 </div>
 
@@ -209,6 +229,7 @@ const FL = {"Mexico":"mx","South Africa":"za","South Korea":"kr","Korea Republic
 // ──────────────────────────────────────────
 let MATCHES = [];      // [{home,away,utcDate,timeStr,dateStr,venue,round,suit,lk,isFinal}]
 let SCORES  = {};      // lk → {status,homeScore,awayScore,clock,isPaused}
+let STANDINGS = null;  // parsed group standings
 let lastUpdate = null;
 let refreshTimer = null;
 let activeFilter = 'all';
@@ -380,6 +401,94 @@ async function fetchLive() {
 }
 
 // ──────────────────────────────────────────
+// ESPN FETCH – STANDINGS
+// ──────────────────────────────────────────
+async function fetchStandings() {
+  if (STANDINGS) { renderStandings(); return; } // cached
+  const el = document.getElementById('schedule');
+  el.innerHTML = '<p class="msg">Loading standings…</p>';
+  try {
+    const r = await fetch('https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const groups = parseStandings(data);
+    if (!groups.length) throw new Error('No standings data');
+    STANDINGS = groups;
+    renderStandings();
+  } catch(err) {
+    console.warn('Standings fetch failed:', err.message);
+    el.innerHTML = `<p class="msg">Standings not available yet — they appear once group matches have been played.<br><br>Try the <strong>All</strong> or <strong>Today</strong> tabs for the schedule.</p>`;
+  }
+}
+
+// Parse ESPN standings response into [{name, rows:[{team,played,win,draw,loss,gf,ga,gd,pts}]}]
+function parseStandings(data) {
+  // ESPN nests groups under data.children[]
+  const children = data.children || data.standings?.children || [];
+  const groups = [];
+  children.forEach(child => {
+    const groupName = child.name || child.abbreviation || 'Group';
+    const entries = child.standings?.entries || [];
+    if (!entries.length) return;
+    const rows = entries.map(entry => {
+      const team = entry.team?.displayName || entry.team?.name || 'TBD';
+      const statByName = {};
+      (entry.stats || []).forEach(s => { statByName[s.name || s.abbreviation] = s.value ?? s.displayValue; });
+      return {
+        team,
+        played: statByName.gamesPlayed ?? statByName.GP ?? 0,
+        win:    statByName.wins ?? statByName.W ?? 0,
+        draw:   statByName.ties ?? statByName.draws ?? statByName.D ?? 0,
+        loss:   statByName.losses ?? statByName.L ?? 0,
+        gf:     statByName.pointsFor ?? statByName.goalsFor ?? statByName.GF ?? 0,
+        ga:     statByName.pointsAgainst ?? statByName.goalsAgainst ?? statByName.GA ?? 0,
+        gd:     statByName.pointDifferential ?? statByName.goalDifferential ?? statByName.GD ?? 0,
+        pts:    statByName.points ?? statByName.PTS ?? 0,
+      };
+    });
+    groups.push({name: groupName, rows});
+  });
+  // Sort groups alphabetically (Group A, B, C...)
+  groups.sort((a,b) => a.name.localeCompare(b.name));
+  return groups;
+}
+
+function renderStandings() {
+  const el = document.getElementById('schedule');
+  if (!STANDINGS || !STANDINGS.length) {
+    el.innerHTML = '<p class="msg">Standings not available yet.</p>';
+    return;
+  }
+  let html = '<div class="standings-grid">';
+  STANDINGS.forEach(group => {
+    const hasTunisia = group.rows.some(r => /tunisia/i.test(r.team));
+    html += `<div class="std-card${hasTunisia ? ' tn-group' : ''}">
+      <div class="std-hdr">${hasTunisia ? '🇹🇳 ' : ''}${group.name}</div>
+      <table class="std-table">
+        <thead><tr>
+          <th></th><th class="team-col">Team</th>
+          <th title="Played">P</th><th title="Won">W</th><th title="Drawn">D</th><th title="Lost">L</th>
+          <th title="Goal Diff">GD</th><th title="Points">Pts</th>
+        </tr></thead>
+        <tbody>`;
+    group.rows.forEach((r, i) => {
+      const isTn = /tunisia/i.test(r.team);
+      const qualLine = i === 1 ? ' qualify-line' : ''; // top 2 typically qualify
+      html += `<tr class="${isTn ? 'std-row-tn' : ''}${qualLine}">
+        <td class="std-rank">${i+1}</td>
+        <td class="team-cell">${flagImg(r.team)}<span>${r.team}</span></td>
+        <td>${r.played}</td><td>${r.win}</td><td>${r.draw}</td><td>${r.loss}</td>
+        <td>${r.gd > 0 ? '+'+r.gd : r.gd}</td>
+        <td class="pts">${r.pts}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ──────────────────────────────────────────
 // SCORE HTML
 // ──────────────────────────────────────────
 function scoreHtml(key) {
@@ -487,6 +596,8 @@ function renderCurrent() { render(activeFilter); }
 function render(filter) {
   activeFilter = filter;
   const el = document.getElementById('schedule');
+
+  if (filter === 'standings') { fetchStandings(); return; }
 
   let items = MATCHES.map((m,i) => ({m,i}));
 
@@ -679,6 +790,7 @@ document.querySelectorAll('.fb').forEach(b => {
     b.classList.add('active');
     render(b.dataset.f);
     if (b.dataset.f === 'today') fetchLive();
+    if (b.dataset.f === 'standings') { STANDINGS = null; fetchStandings(); }
   });
 });
 
