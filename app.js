@@ -33,10 +33,8 @@ let useLocalTZ = false; // false = Tunisia time, true = browser local time
 let favorites = new Set(); // team names starred by user
 const FAVORITES_KEY = 'wc2026_favorites';
 
-// ── PiP (floating live score widget) ──
-let PIP_LK = null;        // lk of the currently pinned match, or null
-let PIP_DISMISSED = false; // user explicitly closed the PiP this session
-let PIP_WINDOW = null;     // reference to the Document PiP floating window, if open
+// ── PiP (floating live scores window) ──
+let PIP_WINDOW = null; // reference to the Document PiP floating window, if open
 
 // ──────────────────────────────────────────
 // UTILS
@@ -285,7 +283,8 @@ function parseSchedule(events) {
 
   updateStats();
   renderCurrent();
-  renderPip();
+  updateFloatingPip();
+  renderTodayPipBanner();
 }
 
 // ──────────────────────────────────────────
@@ -558,7 +557,6 @@ async function openMatchPanel(idx) {
   const body = document.getElementById('panelBody');
   const title = document.getElementById('panelTitle');
 
-  document.getElementById('pipWidget')?.remove();
   title.textContent = m.isFinal ? 'World Cup Final' : `${m.home} vs ${m.away}`;
   overlay.classList.add('open');
   panel.classList.add('open');
@@ -615,7 +613,8 @@ function closeMatchPanel() {
   document.getElementById('matchPanel').classList.remove('open');
   document.getElementById('matchPanel').style.transform = '';
   document.body.style.overflow = '';
-  renderPip();
+  updateFloatingPip();
+  renderTodayPipBanner();
 }
 
 // ── Swipe-down-to-close (mobile bottom sheet) ──
@@ -1111,11 +1110,12 @@ function patchScoreBadges() {
     const isHT   = s && s.status === 'STATUS_HALFTIME';
     card.classList.toggle('live-card', isLive || isHT);
   });
-  renderPip();
+  updateFloatingPip();
+  renderTodayPipBanner();
 }
 
 // ──────────────────────────────────────────
-// PIP (floating live score widget)
+// PIP (floating live scores window — Chrome/Edge desktop only)
 // ──────────────────────────────────────────
 
 // All currently live (in-progress or half-time) matches, in schedule order
@@ -1128,161 +1128,41 @@ function liveMatches() {
     });
 }
 
-// Pin/unpin a match to the PiP widget
-function togglePip(lk) {
-  if (PIP_LK === lk) {
-    PIP_LK = null; // unpin if clicking the same match's pin again
-  } else {
-    PIP_LK = lk;
-    PIP_DISMISSED = false;
-  }
-  renderCurrent(); // update pin button active state on cards
-  renderPip();
-}
-
-// Cycle to the next/previous live match in the PiP (for the multi-match edge case)
-function cyclePip(direction) {
-  const live = liveMatches();
-  if (!live.length) return;
-  const idx = live.findIndex(({m}) => m.lk === PIP_LK);
-  let next;
-  if (idx === -1) next = 0;
-  else next = (idx + direction + live.length) % live.length;
-  PIP_LK = live[next].m.lk;
-  renderPip();
-}
-
-function closePip() {
-  PIP_LK = null;
-  PIP_DISMISSED = true;
-  if (PIP_WINDOW && !PIP_WINDOW.closed) {
-    PIP_WINDOW.close();
-    PIP_WINDOW = null;
-  }
-  renderCurrent();
-  renderPip();
-}
-
-function pipOpenPanel() {
-  const live = liveMatches();
-  const entry = live.find(({m}) => m.lk === PIP_LK);
-  if (entry) openMatchPanel(entry.i);
-}
-
-function renderPip() {
-  // If a floating PiP window is open, update its content and skip the in-page widget
-  if (PIP_WINDOW && !PIP_WINDOW.closed) {
-    updateFloatingPip();
-    document.getElementById('pipWidget')?.remove();
-    return;
-  }
-
-  // Don't show/create the in-page PiP while the match detail panel is open
-  if (document.getElementById('matchPanel')?.classList.contains('open')) return;
-
-  let el = document.getElementById('pipWidget');
-  const live = liveMatches();
-
-  // Auto-pick: if nothing pinned yet, not dismissed, and exactly one live match, show it automatically.
-  // With multiple concurrent matches, wait for the user to pin one (avoids guessing which they care about).
-  if (!PIP_LK && !PIP_DISMISSED && live.length === 1) {
-    PIP_LK = live[0].m.lk;
-  }
-
-  // If the pinned match is no longer live (finished), drop it —
-  // but if other matches are still live, offer to switch via the cycle arrows instead of closing outright
-  if (PIP_LK && !live.some(({m}) => m.lk === PIP_LK)) {
-    if (live.length) {
-      PIP_LK = live[0].m.lk; // hand off to another live match
-    } else {
-      PIP_LK = null; // nothing left live — close
-    }
-  }
-
-  if (!PIP_LK || !live.length) {
-    if (el) el.remove();
-    return;
-  }
-
-  const html = buildPipContent(true);
-
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'pipWidget';
-    el.className = 'pip-widget';
-    document.body.appendChild(el);
-  }
-  el.innerHTML = html;
-}
-
-// Build the inner HTML for the PiP (shared between in-page widget and floating window)
-function buildPipContent(includeFloatBtn) {
-  const live = liveMatches();
-  const entry = live.find(({m}) => m.lk === PIP_LK);
-  if (!entry) return '';
-  const m = entry.m;
-  const sc = SCORES[m.lk] || {};
-  const idxInLive = live.findIndex(({m: mm}) => mm.lk === PIP_LK);
-
-  const statusBadge = sc.status === 'STATUS_HALFTIME'
-    ? `<span class="pip-status ht">HT</span>`
-    : `<span class="pip-status live"><span class="live-dot"></span>${sc.clock || 'LIVE'}</span>`;
-
-  const counter = live.length > 1
-    ? `<span class="pip-counter">${idxInLive+1}/${live.length}</span>`
-    : '';
-
-  const floatBtn = (includeFloatBtn && supportsFloatingPip())
-    ? `<button class="pip-nav pip-float-btn" onclick="openFloatingPip()" title="Float on top of other windows">⧉</button>`
-    : '';
-
-  return `
-    <div class="pip-top">
-      ${live.length > 1 ? `<button class="pip-nav" onclick="cyclePip(-1)" title="Previous live match">‹</button>` : ''}
-      <div class="pip-teams" onclick="pipOpenPanel()">
-        <div class="pip-team">${flagImg(m.home, 'pip-flag')}<span class="pip-score">${sc.homeScore ?? ''}</span></div>
-        <div class="pip-mid">${statusBadge}${counter}</div>
-        <div class="pip-team">${flagImg(m.away, 'pip-flag')}<span class="pip-score">${sc.awayScore ?? ''}</span></div>
-      </div>
-      ${live.length > 1 ? `<button class="pip-nav" onclick="cyclePip(1)" title="Next live match">›</button>` : ''}
-      ${floatBtn}
-      <button class="pip-close" onclick="closePip()" title="Close">✕</button>
-    </div>
-    <div class="pip-names" onclick="pipOpenPanel()">
-      <span>${truncate(m.home, 12)}</span><span>vs</span><span>${truncate(m.away, 12)}</span>
-    </div>`;
-}
-
-// ── Document Picture-in-Picture (Chrome/Edge desktop only) ──
 function supportsFloatingPip() {
   return typeof window !== 'undefined' && 'documentPictureInPicture' in window;
 }
 
+// Open the floating live-scores window (must be called from a user gesture)
 async function openFloatingPip() {
-  if (!supportsFloatingPip() || !PIP_LK) return;
+  if (!supportsFloatingPip()) return;
+  const live = liveMatches();
+  if (!live.length) return;
+
   try {
+    if (PIP_WINDOW && !PIP_WINDOW.closed) {
+      PIP_WINDOW.focus();
+      return;
+    }
+
     const pipWin = await documentPictureInPicture.requestWindow({
-      width: 280,
-      height: 110,
+      width: 300,
+      height: Math.min(60 + live.length * 64, 420),
     });
     PIP_WINDOW = pipWin;
 
-    // Copy the page's stylesheet into the floating window so pip- classes render correctly
+    // Copy the page's stylesheet so pip- classes render correctly
     const styleEl = pipWin.document.createElement('link');
     styleEl.rel = 'stylesheet';
     styleEl.href = new URL('styles.css', window.location.href).href;
     pipWin.document.head.appendChild(styleEl);
 
-    // Base styles for the floating window body
     const baseStyle = pipWin.document.createElement('style');
     baseStyle.textContent = `
       body{margin:0;padding:8px;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
-           background:var(--surface,#fff);color:var(--text,#111)}
-      .pip-float-btn{display:none}
+           background:var(--surface,#fff);color:var(--text,#111);overflow-y:auto}
     `;
     pipWin.document.head.appendChild(baseStyle);
 
-    // Match light/dark theme
     const theme = document.documentElement.getAttribute('data-theme');
     if (theme) pipWin.document.documentElement.setAttribute('data-theme', theme);
 
@@ -1292,71 +1172,97 @@ async function openFloatingPip() {
 
     updateFloatingPip();
 
-    // When the user closes the floating window, fall back to the in-page widget
     pipWin.addEventListener('pagehide', () => {
       PIP_WINDOW = null;
-      renderPip();
     }, { once: true });
 
-    // Remove the in-page widget while floating
-    document.getElementById('pipWidget')?.remove();
+    renderTodayPipBanner(); // refresh banner state now that PiP is open
   } catch(e) {
     console.warn('Floating PiP failed:', e.message);
   }
 }
 
+// Rebuild the floating window's content — called whenever live scores refresh
 function updateFloatingPip() {
   if (!PIP_WINDOW || PIP_WINDOW.closed) return;
   const container = PIP_WINDOW.document.getElementById('pipFloatContent');
   if (!container) return;
 
   const live = liveMatches();
-  const entry = live.find(({m}) => m.lk === PIP_LK);
-  if (!entry) {
-    // Nothing live left to show — close the floating window
+  if (!live.length) {
     PIP_WINDOW.close();
     PIP_WINDOW = null;
+    renderTodayPipBanner();
     return;
   }
-  const m = entry.m;
-  const sc = SCORES[m.lk] || {};
-  const idxInLive = live.findIndex(({m: mm}) => mm.lk === PIP_LK);
 
-  const statusBadge = sc.status === 'STATUS_HALFTIME'
-    ? `<span class="pip-status ht">HT</span>`
-    : `<span class="pip-status live"><span class="live-dot"></span>${sc.clock || 'LIVE'}</span>`;
-  const counter = live.length > 1 ? `<span class="pip-counter">${idxInLive+1}/${live.length}</span>` : '';
+  let html = `<div class="pip-list">`;
+  live.forEach(({m, i}) => {
+    const sc = SCORES[m.lk] || {};
+    const statusBadge = sc.status === 'STATUS_HALFTIME'
+      ? `<span class="pip-status ht">HT</span>`
+      : `<span class="pip-status live"><span class="live-dot"></span>${sc.clock || 'LIVE'}</span>`;
 
-  container.innerHTML = `
-    <div class="pip-top">
-      ${live.length > 1 ? `<button class="pip-nav" data-act="prev" title="Previous live match">‹</button>` : ''}
-      <div class="pip-teams" data-act="open">
-        <div class="pip-team">${flagImg(m.home, 'pip-flag')}<span class="pip-score">${sc.homeScore ?? ''}</span></div>
-        <div class="pip-mid">${statusBadge}${counter}</div>
-        <div class="pip-team">${flagImg(m.away, 'pip-flag')}<span class="pip-score">${sc.awayScore ?? ''}</span></div>
+    html += `<div class="pip-row" data-idx="${i}">
+      <div class="pip-team">${flagImg(m.home, 'pip-flag')}<span class="pip-tname">${truncate(m.home, 10)}</span></div>
+      <div class="pip-mid">
+        <div class="pip-score-row"><span class="pip-score">${sc.homeScore ?? ''}</span><span class="pip-sep">–</span><span class="pip-score">${sc.awayScore ?? ''}</span></div>
+        ${statusBadge}
       </div>
-      ${live.length > 1 ? `<button class="pip-nav" data-act="next" title="Next live match">›</button>` : ''}
-      <button class="pip-close" data-act="close" title="Close">✕</button>
-    </div>
-    <div class="pip-names" data-act="open">
-      <span>${truncate(m.home, 12)}</span><span>vs</span><span>${truncate(m.away, 12)}</span>
+      <div class="pip-team pip-team-away"><span class="pip-tname">${truncate(m.away, 10)}</span>${flagImg(m.away, 'pip-flag')}</div>
     </div>`;
+  });
+  html += `</div>`;
 
-  // Wire up actions to call functions in the MAIN window (the floating window
-  // has its own JS realm and doesn't have access to our globals directly)
-  container.querySelectorAll('[data-act]').forEach(elNode => {
-    elNode.onclick = () => {
-      const act = elNode.dataset.act;
-      if (act === 'prev') cyclePip(-1);
-      else if (act === 'next') cyclePip(1);
-      else if (act === 'close') closePip();
-      else if (act === 'open') pipOpenPanel();
-    };
+  container.innerHTML = html;
+
+  // Wire each row to open that match's panel in the main window
+  container.querySelectorAll('.pip-row').forEach(rowEl => {
+    rowEl.onclick = () => openMatchPanel(parseInt(rowEl.dataset.idx, 10));
   });
 
   // Keep theme in sync
   const theme = document.documentElement.getAttribute('data-theme');
   if (theme) PIP_WINDOW.document.documentElement.setAttribute('data-theme', theme);
+
+  // Resize the window to fit the current number of live matches
+  try {
+    const targetH = Math.min(60 + live.length * 64, 420);
+    PIP_WINDOW.resizeTo(300, targetH);
+  } catch(e) { /* resizeTo may be restricted; ignore */ }
+}
+
+function closeFloatingPip() {
+  if (PIP_WINDOW && !PIP_WINDOW.closed) {
+    PIP_WINDOW.close();
+  }
+  PIP_WINDOW = null;
+  renderTodayPipBanner();
+}
+
+// ── Today-tab banner: prompts the user to open the floating PiP ──
+// Shown only when viewing Today AND at least one match is currently live.
+function renderTodayPipBanner() {
+  const el = document.getElementById('todayPipBanner');
+  if (!el) return; // not on the Today tab
+
+  if (!supportsFloatingPip()) { el.innerHTML = ''; return; }
+
+  const live = liveMatches();
+  if (!live.length) { el.innerHTML = ''; return; }
+
+  if (PIP_WINDOW && !PIP_WINDOW.closed) {
+    el.innerHTML = `<div class="pip-banner pip-banner-active">
+      <span><span class="live-dot"></span> Floating live scores open (${live.length} live)</span>
+      <button class="pip-banner-btn" onclick="closeFloatingPip()">Close</button>
+    </div>`;
+  } else {
+    const label = live.length === 1 ? '1 match live now' : `${live.length} matches live now`;
+    el.innerHTML = `<div class="pip-banner">
+      <span><span class="live-dot"></span> ${label}</span>
+      <button class="pip-banner-btn" onclick="openFloatingPip()">⧉ Open floating live scores</button>
+    </div>`;
+  }
 }
 
 // ──────────────────────────────────────────
@@ -1385,18 +1291,13 @@ function buildCard(m, idx) {
     ? `<div class="fav-star${isFavoriteMatch(m)?' active':''}" onclick="event.stopPropagation();toggleFavoriteMatch(${idx})" title="Star this match">★</div>`
     : '';
 
-  const pipBtn = isLive
-    ? `<button class="pip-pin${PIP_LK===m.lk?' active':''}" onclick="event.stopPropagation();togglePip('${m.lk}')" title="Pin live score">📌</button>`
-    : '';
-
-  return `<div class="mc${tn}${fin}${live}" data-lk="${m.lk}" data-id="${m.id||''}" onclick="if(!event.target.closest('.mc-cal')&&!event.target.closest('.fav-star')&&!event.target.closest('.pip-pin')) openMatchPanel(${idx})" style="cursor:pointer">
+  return `<div class="mc${tn}${fin}${live}" data-lk="${m.lk}" data-id="${m.id||''}" onclick="if(!event.target.closest('.mc-cal')&&!event.target.closest('.fav-star')) openMatchPanel(${idx})" style="cursor:pointer">
     <div class="mc-top">
       <div class="mc-top-left">
         ${favBtn}
         <span class="mc-badge${bCls}">${m.round}</span>
       </div>
       <div class="mc-time-wrap">
-        ${pipBtn}
         <span class="mc-time">${displayTime(m.utcDate)}</span>
         <span class="mc-cdot c${m.suit.cls[0]}"></span>
       </div>
@@ -1459,10 +1360,12 @@ function render(filter) {
         <button class="rfr-btn" onclick="fetchLive()">↻ Refresh</button>
         <span class="upd-lbl" id="upd-lbl">${lastUpdate ? 'Updated ' + lastUpdate.toLocaleTimeString() : ''}</span>
       </div>
+      <div id="todayPipBanner"></div>
       <div class="day-grid">`;
     items.forEach(({m,i}) => { html += buildCard(m,i); });
     html += '</div></div>';
     el.innerHTML = html;
+    renderTodayPipBanner();
     return;
   }
 
@@ -1625,7 +1528,8 @@ function useStaticFallback() {
   }).sort((a,b) => new Date(a.utcDate)-new Date(b.utcDate));
   updateStats();
   renderCurrent();
-  renderPip();
+  updateFloatingPip();
+  renderTodayPipBanner();
 }
 
 // ──────────────────────────────────────────
