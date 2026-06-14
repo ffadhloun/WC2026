@@ -74,6 +74,27 @@ function suit(utc) {
 function isTN(m) { return /tunisia/i.test(m.home + m.away); }
 function lk(h, a) { return (h + '|' + a).toLowerCase(); }
 
+// Statuses that mean "the match is currently being played" (any in-play state).
+// Soccer uses several variants beyond the generic STATUS_IN_PROGRESS
+// (e.g. first/second half, stoppage/added time, extra time, penalties).
+const NOT_LIVE_STATUSES = new Set([
+  'STATUS_SCHEDULED', 'STATUS_FINAL', 'STATUS_FULL_TIME',
+  'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_CANCELLED',
+  'STATUS_ABANDONED', 'STATUS_SUSPENDED', '',
+]);
+function isHalftimeStatus(status) {
+  return status === 'STATUS_HALFTIME';
+}
+function isLiveStatus(status) {
+  if (!status) return false;
+  if (isHalftimeStatus(status)) return true;
+  return !NOT_LIVE_STATUSES.has(status);
+}
+// "live OR halftime" — used everywhere a match should be treated as in-progress
+function isInPlay(scoreEntry) {
+  return !!scoreEntry && isLiveStatus(scoreEntry.status);
+}
+
 function flagImg(name, extraClass) {
   const code = FL[name];
   const cls = extraClass ? ` ${extraClass}` : '';
@@ -276,7 +297,7 @@ function parseSchedule(events) {
         homeScore: m.homeScore,
         awayScore: m.awayScore,
         clock: m.clock,
-        isPaused: m.status === 'STATUS_HALFTIME',
+        isPaused: isHalftimeStatus(m.status),
       };
     }
   });
@@ -291,10 +312,12 @@ function parseSchedule(events) {
 // ESPN FETCH – LIVE SCORES (today only)
 // ──────────────────────────────────────────
 async function fetchLive() {
-  const d = new Date();
-  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   try {
-    const r = await fetch(`${ESPN_BASE}/scoreboard?dates=${ymd}`);
+    // Use the same wide-range query as fetchSchedule — the single-day `dates=YYYYMMDD`
+    // query proved unreliable (timezone boundaries, and some live matches not
+    // appearing under "today" depending on how ESPN buckets the date). The full
+    // range is a small payload (~100 events) and guarantees every match is covered.
+    const r = await fetch(`${ESPN_BASE}/scoreboard?dates=20260611-20260719&limit=120`);
     if (!r.ok) return;
     const data = await r.json();
     (data.events || []).forEach(ev => {
@@ -309,7 +332,7 @@ async function fetchLive() {
         homeScore: home.score ?? '',
         awayScore: away.score ?? '',
         clock:     comp.status?.displayClock || '',
-        isPaused:  st === 'STATUS_HALFTIME',
+        isPaused:  isHalftimeStatus(st),
       };
     });
     lastUpdate = new Date();
@@ -567,9 +590,9 @@ async function openMatchPanel(idx) {
   const homeScore = sc.homeScore ?? '–';
   const awayScore = sc.awayScore ?? '–';
   let statusTxt = displayTime(m.utcDate) + ' · ' + displayDateLabel(m.utcDate);
-  if (sc.status === 'STATUS_IN_PROGRESS') statusTxt = `LIVE · ${sc.clock || ''}`;
-  else if (sc.status === 'STATUS_HALFTIME') statusTxt = 'Half time';
-  else if (sc.status === 'STATUS_FINAL') statusTxt = 'Full time';
+  if (isHalftimeStatus(sc.status)) statusTxt = 'Half time';
+  else if (sc.status === 'STATUS_FINAL' || sc.status === 'STATUS_FULL_TIME') statusTxt = 'Full time';
+  else if (isLiveStatus(sc.status)) statusTxt = `LIVE · ${sc.clock || ''}`;
 
   const headerHtml = (m.home === 'TBD')
     ? `<div class="pn-score"><div class="pn-status" style="font-size:.9rem;font-weight:600">${m.round}</div></div>`
@@ -1071,13 +1094,7 @@ function scoreHtml(key) {
     <span class="sn">${s.awayScore}</span>
   </div>`;
 
-  if (s.status === 'STATUS_IN_PROGRESS') {
-    return `<div class="score-area"><div class="score-live">
-      ${nums}
-      <span class="live-pill"><span class="pulse"></span>${s.clock || 'LIVE'}</span>
-    </div></div>`;
-  }
-  if (s.status === 'STATUS_HALFTIME') {
+  if (isHalftimeStatus(s.status)) {
     return `<div class="score-area"><div class="score-live">
       ${nums}
       <span class="ht-pill">HT</span>
@@ -1089,8 +1106,7 @@ function scoreHtml(key) {
       <span class="ft-pill">FT</span>
     </div></div>`;
   }
-  // Fallback for any other "in-play" status
-  if (s.homeScore !== '' && s.awayScore !== '') {
+  if (isLiveStatus(s.status)) {
     return `<div class="score-area"><div class="score-live">
       ${nums}
       <span class="live-pill"><span class="pulse"></span>${s.clock || 'LIVE'}</span>
@@ -1106,9 +1122,7 @@ function patchScoreBadges() {
     const sa  = card.querySelector('.score-area-wrap');
     if (sa) sa.innerHTML = scoreHtml(key);
     const s = SCORES[key];
-    const isLive = s && s.status === 'STATUS_IN_PROGRESS';
-    const isHT   = s && s.status === 'STATUS_HALFTIME';
-    card.classList.toggle('live-card', isLive || isHT);
+    card.classList.toggle('live-card', isInPlay(s));
   });
   updateFloatingPip();
   renderTodayPipBanner();
@@ -1124,7 +1138,7 @@ function liveMatches() {
     .map((m,i) => ({m,i}))
     .filter(({m}) => {
       const s = SCORES[m.lk];
-      return s && (s.status === 'STATUS_IN_PROGRESS' || s.status === 'STATUS_HALFTIME');
+      return isInPlay(s);
     });
 }
 
@@ -1199,7 +1213,7 @@ function updateFloatingPip() {
   let html = `<div class="pip-list">`;
   live.forEach(({m, i}) => {
     const sc = SCORES[m.lk] || {};
-    const statusBadge = sc.status === 'STATUS_HALFTIME'
+    const statusBadge = isHalftimeStatus(sc.status)
       ? `<span class="pip-status ht">HT</span>`
       : `<span class="pip-status live"><span class="live-dot"></span>${sc.clock || 'LIVE'}</span>`;
 
@@ -1278,7 +1292,7 @@ function buildCard(m, idx) {
   const fin = m.isFinal ? ' fin-card' : '';
   const bCls = m.isFinal ? ' b-fin' : m.isKO ? ' b-ko' : '';
   const sc  = SCORES[m.lk];
-  const isLive = sc && (sc.status === 'STATUS_IN_PROGRESS' || sc.status === 'STATUS_HALFTIME');
+  const isLive = isInPlay(sc);
   const live = isLive ? ' live-card' : '';
 
   const homeTag = STANDINGS_POS[canon(m.home)] ? `<span class="std-tag">${STANDINGS_POS[canon(m.home)]}</span>` : '';
@@ -1355,7 +1369,7 @@ function render(filter) {
 
     const liveCount = items.filter(({m}) => {
       const s = SCORES[m.lk];
-      return s && (s.status === 'STATUS_IN_PROGRESS' || s.status === 'STATUS_HALFTIME');
+      return isInPlay(s);
     }).length;
 
     let html = `<div class="day-block">
@@ -1418,7 +1432,7 @@ function updateLiveCntBadge() {
   if (!el) return;
   const today = todayTun();
   const count = MATCHES.filter(m => m.dateStr === today).filter(m => {
-    const s = SCORES[m.lk]; return s && (s.status==='STATUS_IN_PROGRESS'||s.status==='STATUS_HALFTIME');
+    const s = SCORES[m.lk]; return isInPlay(s);
   }).length;
   el.textContent = count ? count + ' LIVE' : '';
   el.style.display = count ? '' : 'none';
@@ -1427,7 +1441,7 @@ function updateLiveCntBadge() {
 function updateLiveBtnLabel() {
   const today = todayTun();
   const liveCount = MATCHES.filter(m => m.dateStr === today).filter(m => {
-    const s = SCORES[m.lk]; return s && (s.status==='STATUS_IN_PROGRESS'||s.status==='STATUS_HALFTIME');
+    const s = SCORES[m.lk]; return isInPlay(s);
   }).length;
   document.getElementById('btn-today').textContent = liveCount ? `📅 Today · ${liveCount} LIVE` : '📅 Today';
 }
@@ -1578,6 +1592,8 @@ loadFavorites();
 fetchSchedule();
 // Pre-fetch standings tags in background (silent, doesn't change view)
 fetchStandingsQuiet();
+// Fetch live scores immediately (don't wait for the first 60s interval tick)
+fetchLive();
 // Auto-refresh live scores every 60s
 refreshTimer = setInterval(async () => {
   await fetchLive();
