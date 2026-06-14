@@ -1261,7 +1261,7 @@ function supportsFloatingPip() {
 async function openFloatingPip() {
   if (!supportsFloatingPip() || !PIP_LK) return;
   try {
-    const pipWin = await documentPictureInPicture.requestPictureInPicture({
+    const pipWin = await documentPictureInPicture.requestWindow({
       width: 280,
       height: 110,
     });
