@@ -200,6 +200,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .pip-counter{font-size:.6rem;color:var(--text-faint)}
 .pip-nav{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:22px;height:22px;flex-shrink:0;cursor:pointer;color:var(--text-muted);font-size:.9rem;display:flex;align-items:center;justify-content:center;line-height:1}
 .pip-nav:hover{color:var(--text);border-color:var(--accent)}
+.pip-float-btn{font-size:.85rem}
 .pip-close{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:.75rem;flex-shrink:0;padding:2px 4px;border-radius:4px}
 .pip-close:hover{color:var(--text);background:var(--surface2)}
 .pip-names{display:flex;justify-content:space-between;gap:6px;font-size:.66rem;color:var(--text-faint);margin-top:4px;padding:0 2px;cursor:pointer}
