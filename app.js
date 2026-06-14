@@ -596,6 +596,8 @@ async function openMatchPanel(idx) {
     if (!r.ok) throw new Error('HTTP '+r.status);
     const data = await r.json();
     body.innerHTML = headerHtml + buildPanelDetails(data, m);
+    // Canvas needs to be in the DOM before we can measure it
+    if (PITCH_DATA) requestAnimationFrame(() => drawPitch('home'));
   } catch(e) {
     body.innerHTML = headerHtml + `<div class="pn-section"><p style="font-size:.78rem;color:var(--text-faint)">Match details aren't available right now.</p></div>`;
   }
@@ -646,8 +648,277 @@ function closeMatchPanel() {
   document.addEventListener('mouseup', onEnd);
 })();
 
+// ── PITCH VIEW (formation graphic) ──
+// Maps ESPN position abbreviations to broad categories
+// Parse "4-4-2" -> [1, 4, 4, 2] (GK + formation lines). Returns null if unparseable.
+function parseFormation(formationStr, totalPlayers) {
+  if (!formationStr) return null;
+  const parts = formationStr.split('-').map(n => parseInt(n, 10)).filter(n => !isNaN(n) && n > 0);
+  if (!parts.length) return null;
+  const sum = parts.reduce((a,b) => a+b, 0);
+  // formation strings describe outfield players only; GK is implicit
+  if (sum + 1 !== totalPlayers) return null; // sanity check against actual roster size
+  return [1, ...parts];
+}
+
+// Slice players sequentially into rows of the given sizes (GK row first)
+function sliceIntoRows(players, rowSizes) {
+  const rows = [];
+  let idx = 0;
+  rowSizes.forEach(size => {
+    rows.push(players.slice(idx, idx + size));
+    idx += size;
+  });
+  return rows;
+}
+
+// Fallback: group by broad position category when formation string is unusable
+const POS_CATEGORY = {
+  GK:'GK', G:'GK',
+  LB:'D', CB:'D', RB:'D', LCB:'D', RCB:'D', SW:'D', WB:'D', LWB:'D', RWB:'D', D:'D', DF:'D',
+  LM:'M', CM:'M', RM:'M', LWM:'M', RWM:'M', DM:'M', CDM:'M', AM:'M', CAM:'M', LAM:'M', RAM:'M', M:'M', MF:'M',
+  LW:'F', RW:'F', CF:'F', ST:'F', SS:'F', F:'F', FW:'F',
+};
+function categorize(p) {
+  const abbr = (p.position?.abbreviation || '').toUpperCase();
+  return POS_CATEGORY[abbr] || null;
+}
+function groupByCategory(players) {
+  const groups = {GK:[], D:[], M:[], F:[]};
+  players.forEach(p => {
+    const cat = categorize(p);
+    (cat ? groups[cat] : groups.D).push(p);
+  });
+  return [groups.GK, groups.D, groups.M, groups.F].filter(r => r.length);
+}
+
+// Build display rows for one team: try formation string first, fall back to position grouping
+function buildFormationRows(players, formationStr) {
+  const fromFormation = parseFormation(formationStr, players.length);
+  if (fromFormation) return sliceIntoRows(players, fromFormation);
+  return groupByCategory(players);
+}
+
+// Stash lineup data globally so the canvas can be (re)drawn on tab switch / resize
+let PITCH_DATA = null;
+
+function buildPitchView(homeStarters, awayStarters, hFormation, aFormation, m) {
+  if (homeStarters.length < 7 || awayStarters.length < 7) return '';
+
+  const hRows = buildFormationRows(homeStarters, hFormation);
+  const aRows = buildFormationRows(awayStarters, aFormation);
+  if (!hRows.length || !aRows.length) return '';
+
+  PITCH_DATA = {
+    home: {rows: hRows, name: m.home, formation: hFormation},
+    away: {rows: aRows, name: m.away, formation: aFormation},
+  };
+
+  return `<div class="pitch-wrap">
+    <div class="pitch-tabs">
+      <button class="pitch-tab active" data-team="home" onclick="switchPitchTab('home')">
+        ${flagImg(m.home, 'pitch-tab-flag')}<span>${m.home}</span>${hFormation ? `<span class="formation-tag">${hFormation}</span>` : ''}
+      </button>
+      <button class="pitch-tab" data-team="away" onclick="switchPitchTab('away')">
+        ${flagImg(m.away, 'pitch-tab-flag')}<span>${m.away}</span>${aFormation ? `<span class="formation-tag">${aFormation}</span>` : ''}
+      </button>
+    </div>
+    <canvas id="pitchCanvas" class="pitch-canvas"></canvas>
+  </div>`;
+}
+
+// Draw one team's lineup on the canvas, GK at bottom, attacking upward
+function drawPitch(team) {
+  const canvas = document.getElementById('pitchCanvas');
+  if (!canvas || !PITCH_DATA) return;
+  const data = PITCH_DATA[team];
+  if (!data) return;
+
+  // Match canvas resolution to its CSS size (with devicePixelRatio for crispness)
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = Math.round(cssW * 1.35); // taller than wide
+  canvas.style.height = cssH + 'px';
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const W = cssW, H = cssH;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+  // ── Field background ──
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  if (isDark) {
+    grad.addColorStop(0, '#1a6b3c'); grad.addColorStop(0.5, '#176338'); grad.addColorStop(1, '#1a6b3c');
+  } else {
+    grad.addColorStop(0, '#1f8a4c'); grad.addColorStop(0.5, '#1c7f46'); grad.addColorStop(1, '#1f8a4c');
+  }
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, W, H, 8);
+  ctx.fill();
+
+  // ── Field markings ──
+  ctx.strokeStyle = 'rgba(255,255,255,.35)';
+  ctx.lineWidth = 1.5;
+
+  // Halfway line (near top, since team attacks upward off-screen)
+  const halfwayY = H * 0.10;
+  ctx.beginPath();
+  ctx.moveTo(0, halfwayY);
+  ctx.lineTo(W, halfwayY);
+  ctx.stroke();
+
+  // Center circle (centered on halfway line)
+  ctx.beginPath();
+  ctx.arc(W/2, halfwayY, W * 0.16, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Own goal box (bottom)
+  const boxW = W * 0.5, boxH = H * 0.10;
+  ctx.strokeRect((W - boxW)/2, H - boxH, boxW, boxH);
+  // Six-yard box
+  const sixW = W * 0.26, sixH = H * 0.045;
+  ctx.strokeRect((W - sixW)/2, H - sixH, sixW, sixH);
+  // Penalty arc
+  ctx.beginPath();
+  ctx.arc(W/2, H - boxH, W * 0.1, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.stroke();
+
+  // ── Player rows ──
+  const rows = data.rows;
+  const n = rows.length;
+  rows.forEach((row, rowIdx) => {
+    const t = n === 1 ? 0.5 : rowIdx / (n - 1);
+    // y: 0.90 (own goal, GK) up to halfwayY-ish for forwards
+    const yFrac = 0.90 - t * (0.90 - (halfwayY/H + 0.05));
+    const y = H * yFrac;
+    row.forEach((p, i) => {
+      const rowSize = row.length;
+      const xFrac = rowSize === 1 ? 0.5 : 0.12 + (i / (rowSize - 1)) * 0.76;
+      const x = W * xFrac;
+      drawPlayer(ctx, x, y, p, team, W);
+    });
+  });
+}
+
+function drawPlayer(ctx, x, y, p, team, W) {
+  const s = Math.max(15, W * 0.062); // jersey "size" unit
+  const color = team === 'home'
+    ? (getCss('--accent') || '#d42e35')
+    : (getCss('--gcal') || '#1a73e8');
+
+  drawJersey(ctx, x, y, s, color);
+
+  // Jersey number on chest
+  ctx.fillStyle = '#fff';
+  ctx.font = `800 ${s*0.78}px -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(p.jersey || '', x, y + s*0.12);
+
+  // Captain badge
+  if (p.captain) {
+    const cr = s * 0.36;
+    const bx = x + s*0.95, by = y - s*0.85;
+    ctx.beginPath();
+    ctx.arc(bx, by, cr, 0, Math.PI*2);
+    ctx.fillStyle = '#f0b429';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = `800 ${cr*1.1}px -apple-system, sans-serif`;
+    ctx.fillText('C', bx, by + 0.5);
+  }
+
+  // Name below
+  const name = (p.athlete?.shortName || p.athlete?.displayName || '').split(' ').pop();
+  ctx.fillStyle = isDarkMode() ? '#e8eaf0' : '#1a1a1a';
+  ctx.font = `600 ${Math.max(9, W*0.028)}px -apple-system, sans-serif`;
+  ctx.textBaseline = 'top';
+  // Shadow for legibility on green
+  ctx.shadowColor = 'rgba(0,0,0,.5)';
+  ctx.shadowBlur = 2;
+  ctx.fillText(truncate(name, 10), x, y + s*1.15 + 4);
+  ctx.shadowBlur = 0;
+}
+
+// Draw a simple jersey silhouette centered at (x,y) with overall size unit `s`.
+// Shape: sleeves on each side, collar notch at top, slightly flared hem at bottom.
+function drawJersey(ctx, x, y, s, color) {
+  const shoulderY  = y - s * 0.85;
+  const sleeveTipY = y - s * 0.55;
+  const armOutX    = s * 1.05;
+  const bodyTopX   = s * 0.62;
+  const bodyBotX   = s * 0.78;
+  const hemY       = y + s * 0.95;
+  const collarW    = s * 0.28;
+  const collarDip  = s * 0.18;
+
+  ctx.beginPath();
+  // Start at left collar point
+  ctx.moveTo(x - collarW, shoulderY);
+  // Left shoulder out to left sleeve tip
+  ctx.lineTo(x - armOutX, sleeveTipY);
+  // Left sleeve underside back in to body
+  ctx.lineTo(x - bodyTopX, y - s * 0.25);
+  // Down left side to hem
+  ctx.lineTo(x - bodyBotX, hemY);
+  // Across bottom hem
+  ctx.lineTo(x + bodyBotX, hemY);
+  // Up right side to underarm
+  ctx.lineTo(x + bodyTopX, y - s * 0.25);
+  // Right sleeve underside out to tip
+  ctx.lineTo(x + armOutX, sleeveTipY);
+  // Right shoulder in to right collar point
+  ctx.lineTo(x + collarW, shoulderY);
+  // Collar notch (V neck) back to start
+  ctx.quadraticCurveTo(x, shoulderY + collarDip, x - collarW, shoulderY);
+  ctx.closePath();
+
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255,255,255,.85)';
+  ctx.stroke();
+}
+
+function truncate(s, n) { return s.length > n ? s.slice(0, n-1) + '…' : s; }
+function isDarkMode() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function getCss(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function switchPitchTab(team) {
+  document.querySelectorAll('.pitch-tab').forEach(b => b.classList.toggle('active', b.dataset.team === team));
+  drawPitch(team);
+}
+
+// Redraw on window resize (debounced)
+let pitchResizeTimer = null;
+window.addEventListener('resize', () => {
+  if (!PITCH_DATA) return;
+  clearTimeout(pitchResizeTimer);
+  pitchResizeTimer = setTimeout(() => {
+    const active = document.querySelector('.pitch-tab.active');
+    if (active) drawPitch(active.dataset.team);
+  }, 150);
+});
+
 function buildPanelDetails(data, m) {
   let html = '';
+  PITCH_DATA = null; // reset; buildPitchView will repopulate if lineups are available
 
   // ── Events timeline (goals, cards, subs) ──
   const keyEvents = (data.keyEvents || []).filter(e => {
@@ -712,23 +983,61 @@ function buildPanelDetails(data, m) {
     }
   }
 
-  // ── Lineups ──
+  // ── Lineups (pitch view) ──
   const lineups = data.rosters;
   if (lineups && lineups.length === 2) {
     const home = lineups.find(l => l.homeAway === 'home') || lineups[0];
     const away = lineups.find(l => l.homeAway === 'away') || lineups[1];
-    const starters = roster => (roster.roster || []).filter(p => p.starter).slice(0,11);
+
+    const getFormation = roster => roster.formation || roster.team?.formation || '';
+    const hFormation = getFormation(home);
+    const aFormation = getFormation(away);
+
+    const playerLabel = p => {
+      const name = p.athlete?.shortName || p.athlete?.displayName || 'Unknown';
+      const pos = p.position?.abbreviation || p.position?.name || '';
+      const cap = p.captain ? ' <span class="cap-badge" title="Captain">C</span>' : '';
+      return {name, pos, cap};
+    };
+
+    const starters = roster => (roster.roster || []).filter(p => p.starter);
+    const subs     = roster => (roster.roster || []).filter(p => !p.starter);
+
     const hs = starters(home), as = starters(away);
+    const hSubs = subs(home), aSubs = subs(away);
+
     if (hs.length || as.length) {
-      html += `<div class="pn-section"><div class="pn-section-title">Starting XI</div>
+      const renderPlayer = p => {
+        const {name, pos, cap} = playerLabel(p);
+        return `<div class="pn-player">
+          <span class="num">${p.jersey||''}</span>
+          <span>${name}${cap}</span>
+          ${pos ? `<span class="pos-tag">${pos}</span>` : ''}
+        </div>`;
+      };
+      const renderSubsList = list => list.length
+        ? `<details class="pn-subs">
+            <summary>Substitutes (${list.length})</summary>
+            ${list.map(renderPlayer).join('')}
+          </details>`
+        : '';
+
+      // Try the pitch graphic; falls back to list-only if formations/positions are missing
+      const pitchHtml = buildPitchView(hs, as, hFormation, aFormation, m);
+
+      html += `<div class="pn-section">
+        <div class="pn-section-title">Lineups</div>
+        ${pitchHtml}
         <div class="pn-lineup-cols">
           <div class="pn-lineup-col">
-            <div class="pn-lineup-team">${flagImg(m.home)}<span>${m.home}</span></div>
-            ${hs.map(p => `<div class="pn-player"><span class="num">${p.jersey||''}</span><span>${p.athlete?.shortName || p.athlete?.displayName || ''}</span></div>`).join('')}
+            <div class="pn-lineup-team">${flagImg(m.home)}<span>${m.home}</span>${hFormation ? `<span class="formation-tag">${hFormation}</span>` : ''}</div>
+            ${hs.map(renderPlayer).join('')}
+            ${renderSubsList(hSubs)}
           </div>
           <div class="pn-lineup-col">
-            <div class="pn-lineup-team">${flagImg(m.away)}<span>${m.away}</span></div>
-            ${as.map(p => `<div class="pn-player"><span class="num">${p.jersey||''}</span><span>${p.athlete?.shortName || p.athlete?.displayName || ''}</span></div>`).join('')}
+            <div class="pn-lineup-team">${flagImg(m.away)}<span>${m.away}</span>${aFormation ? `<span class="formation-tag">${aFormation}</span>` : ''}</div>
+            ${as.map(renderPlayer).join('')}
+            ${renderSubsList(aSubs)}
           </div>
         </div>
       </div>`;
@@ -1078,6 +1387,10 @@ document.querySelectorAll('.fb').forEach(b => {
 function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   document.getElementById('themeBtn').textContent = dark ? '☀️ Light' : '🌙 Dark';
+  if (PITCH_DATA) {
+    const active = document.querySelector('.pitch-tab.active');
+    if (active) drawPitch(active.dataset.team);
+  }
 }
 function toggleTheme() {
   applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
