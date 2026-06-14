@@ -1,0 +1,32 @@
+{
+  "name": "FIFA World Cup 2026 \u2013 Tunisia Time",
+  "short_name": "WC 2026 TN",
+  "description": "FIFA World Cup 2026 schedule, live scores, standings and calendar reminders \u2014 all times in Tunisia (UTC+1).",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1117",
+  "theme_color": "#d42e35",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

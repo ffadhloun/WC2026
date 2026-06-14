@@ -1414,3 +1414,10 @@ refreshTimer = setInterval(async () => {
   await fetchLive();
   // Also re-fetch full schedule once per 5 min to catch any fixture changes
 }, 60000);
+
+// ── PWA: register service worker for offline shell caching ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* silent */ });
+  });
+}
