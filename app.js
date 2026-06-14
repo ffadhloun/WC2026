@@ -33,6 +33,10 @@ let useLocalTZ = false; // false = Tunisia time, true = browser local time
 let favorites = new Set(); // team names starred by user
 const FAVORITES_KEY = 'wc2026_favorites';
 
+// ── PiP (floating live score widget) ──
+let PIP_LK = null;        // lk of the currently pinned match, or null
+let PIP_DISMISSED = false; // user explicitly closed the PiP this session
+
 // ──────────────────────────────────────────
 // UTILS
 // ──────────────────────────────────────────
@@ -280,6 +284,7 @@ function parseSchedule(events) {
 
   updateStats();
   renderCurrent();
+  renderPip();
 }
 
 // ──────────────────────────────────────────
@@ -552,6 +557,7 @@ async function openMatchPanel(idx) {
   const body = document.getElementById('panelBody');
   const title = document.getElementById('panelTitle');
 
+  document.getElementById('pipWidget')?.remove();
   title.textContent = m.isFinal ? 'World Cup Final' : `${m.home} vs ${m.away}`;
   overlay.classList.add('open');
   panel.classList.add('open');
@@ -608,6 +614,7 @@ function closeMatchPanel() {
   document.getElementById('matchPanel').classList.remove('open');
   document.getElementById('matchPanel').style.transform = '';
   document.body.style.overflow = '';
+  renderPip();
 }
 
 // ── Swipe-down-to-close (mobile bottom sheet) ──
@@ -1103,6 +1110,123 @@ function patchScoreBadges() {
     const isHT   = s && s.status === 'STATUS_HALFTIME';
     card.classList.toggle('live-card', isLive || isHT);
   });
+  renderPip();
+}
+
+// ──────────────────────────────────────────
+// PIP (floating live score widget)
+// ──────────────────────────────────────────
+
+// All currently live (in-progress or half-time) matches, in schedule order
+function liveMatches() {
+  return MATCHES
+    .map((m,i) => ({m,i}))
+    .filter(({m}) => {
+      const s = SCORES[m.lk];
+      return s && (s.status === 'STATUS_IN_PROGRESS' || s.status === 'STATUS_HALFTIME');
+    });
+}
+
+// Pin/unpin a match to the PiP widget
+function togglePip(lk) {
+  if (PIP_LK === lk) {
+    PIP_LK = null; // unpin if clicking the same match's pin again
+  } else {
+    PIP_LK = lk;
+    PIP_DISMISSED = false;
+  }
+  renderCurrent(); // update pin button active state on cards
+  renderPip();
+}
+
+// Cycle to the next/previous live match in the PiP (for the multi-match edge case)
+function cyclePip(direction) {
+  const live = liveMatches();
+  if (!live.length) return;
+  const idx = live.findIndex(({m}) => m.lk === PIP_LK);
+  let next;
+  if (idx === -1) next = 0;
+  else next = (idx + direction + live.length) % live.length;
+  PIP_LK = live[next].m.lk;
+  renderPip();
+}
+
+function closePip() {
+  PIP_LK = null;
+  PIP_DISMISSED = true;
+  renderCurrent();
+  renderPip();
+}
+
+function pipOpenPanel() {
+  const live = liveMatches();
+  const entry = live.find(({m}) => m.lk === PIP_LK);
+  if (entry) openMatchPanel(entry.i);
+}
+
+function renderPip() {
+  // Don't show/create the PiP while the match detail panel is open
+  if (document.getElementById('matchPanel')?.classList.contains('open')) return;
+
+  let el = document.getElementById('pipWidget');
+  const live = liveMatches();
+
+  // Auto-pick: if nothing pinned yet, not dismissed, and exactly one live match, show it automatically.
+  // With multiple concurrent matches, wait for the user to pin one (avoids guessing which they care about).
+  if (!PIP_LK && !PIP_DISMISSED && live.length === 1) {
+    PIP_LK = live[0].m.lk;
+  }
+
+  // If the pinned match is no longer live (finished), drop it —
+  // but if other matches are still live, offer to switch via the cycle arrows instead of closing outright
+  if (PIP_LK && !live.some(({m}) => m.lk === PIP_LK)) {
+    if (live.length) {
+      PIP_LK = live[0].m.lk; // hand off to another live match
+    } else {
+      PIP_LK = null; // nothing left live — close
+    }
+  }
+
+  if (!PIP_LK || !live.length) {
+    if (el) el.remove();
+    return;
+  }
+
+  const entry = live.find(({m}) => m.lk === PIP_LK);
+  const m = entry.m;
+  const sc = SCORES[m.lk] || {};
+  const idxInLive = live.findIndex(({m: mm}) => mm.lk === PIP_LK);
+
+  const statusBadge = sc.status === 'STATUS_HALFTIME'
+    ? `<span class="pip-status ht">HT</span>`
+    : `<span class="pip-status live"><span class="live-dot"></span>${sc.clock || 'LIVE'}</span>`;
+
+  const counter = live.length > 1
+    ? `<span class="pip-counter">${idxInLive+1}/${live.length}</span>`
+    : '';
+
+  const html = `
+    <div class="pip-top">
+      ${live.length > 1 ? `<button class="pip-nav" onclick="cyclePip(-1)" title="Previous live match">‹</button>` : ''}
+      <div class="pip-teams" onclick="pipOpenPanel()">
+        <div class="pip-team">${flagImg(m.home, 'pip-flag')}<span class="pip-score">${sc.homeScore ?? ''}</span></div>
+        <div class="pip-mid">${statusBadge}${counter}</div>
+        <div class="pip-team">${flagImg(m.away, 'pip-flag')}<span class="pip-score">${sc.awayScore ?? ''}</span></div>
+      </div>
+      ${live.length > 1 ? `<button class="pip-nav" onclick="cyclePip(1)" title="Next live match">›</button>` : ''}
+      <button class="pip-close" onclick="closePip()" title="Close">✕</button>
+    </div>
+    <div class="pip-names" onclick="pipOpenPanel()">
+      <span>${truncate(m.home, 12)}</span><span>vs</span><span>${truncate(m.away, 12)}</span>
+    </div>`;
+
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pipWidget';
+    el.className = 'pip-widget';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = html;
 }
 
 // ──────────────────────────────────────────
@@ -1131,13 +1255,18 @@ function buildCard(m, idx) {
     ? `<div class="fav-star${isFavoriteMatch(m)?' active':''}" onclick="event.stopPropagation();toggleFavoriteMatch(${idx})" title="Star this match">★</div>`
     : '';
 
-  return `<div class="mc${tn}${fin}${live}" data-lk="${m.lk}" data-id="${m.id||''}" onclick="if(!event.target.closest('.mc-cal')&&!event.target.closest('.fav-star')) openMatchPanel(${idx})" style="cursor:pointer">
+  const pipBtn = isLive
+    ? `<button class="pip-pin${PIP_LK===m.lk?' active':''}" onclick="event.stopPropagation();togglePip('${m.lk}')" title="Pin live score">📌</button>`
+    : '';
+
+  return `<div class="mc${tn}${fin}${live}" data-lk="${m.lk}" data-id="${m.id||''}" onclick="if(!event.target.closest('.mc-cal')&&!event.target.closest('.fav-star')&&!event.target.closest('.pip-pin')) openMatchPanel(${idx})" style="cursor:pointer">
     <div class="mc-top">
       <div class="mc-top-left">
         ${favBtn}
         <span class="mc-badge${bCls}">${m.round}</span>
       </div>
       <div class="mc-time-wrap">
+        ${pipBtn}
         <span class="mc-time">${displayTime(m.utcDate)}</span>
         <span class="mc-cdot c${m.suit.cls[0]}"></span>
       </div>
@@ -1366,6 +1495,7 @@ function useStaticFallback() {
   }).sort((a,b) => new Date(a.utcDate)-new Date(b.utcDate));
   updateStats();
   renderCurrent();
+  renderPip();
 }
 
 // ──────────────────────────────────────────
