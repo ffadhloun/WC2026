@@ -1246,10 +1246,15 @@ function renderTodayPipBanner() {
   const el = document.getElementById('todayPipBanner');
   if (!el) return; // not on the Today tab
 
-  if (!supportsFloatingPip()) { el.innerHTML = ''; return; }
-
   const live = liveMatches();
   if (!live.length) { el.innerHTML = ''; return; }
+
+  if (!supportsFloatingPip()) {
+    el.innerHTML = `<div class="pip-banner pip-banner-unsupported">
+      <span><span class="live-dot"></span> ${live.length === 1 ? '1 match live now' : `${live.length} matches live now`} — floating live scores need Chrome or Edge on desktop</span>
+    </div>`;
+    return;
+  }
 
   if (PIP_WINDOW && !PIP_WINDOW.closed) {
     el.innerHTML = `<div class="pip-banner pip-banner-active">

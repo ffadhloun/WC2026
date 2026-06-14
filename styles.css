@@ -208,6 +208,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   font-size:.78rem;color:var(--text);
 }
 .pip-banner-active{border-color:var(--accent)}
+.pip-banner-unsupported{color:var(--text-muted);border-style:dashed}
 .pip-banner .live-dot{
   display:inline-block;width:7px;height:7px;border-radius:50%;
   background:var(--accent);margin-right:4px;vertical-align:middle;
